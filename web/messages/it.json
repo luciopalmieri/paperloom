@@ -23,5 +23,22 @@
     "label": "Lingua",
     "en": "English",
     "it": "Italiano"
+  },
+  "tools": {
+    "ocr-to-markdown": {
+      "title": "OCR in Markdown",
+      "subtitle": "Carica un PDF. Ottieni Markdown pulito, pagina per pagina.",
+      "drop-here": "Trascina qui un PDF, o clicca per sceglierlo",
+      "drop-help": "Solo PDF · max {maxMb} MB · max {maxPages} pagine",
+      "uploading": "Caricamento…",
+      "starting": "Avvio OCR…",
+      "page-of": "Pagina {page} di {filename}",
+      "stream-region": "Output OCR, aggiornato a mano a mano che le pagine vengono processate",
+      "no-output-yet": "In attesa della prima pagina…",
+      "error-too-large": "File troppo grande.",
+      "error-too-many-pages": "Il PDF ha troppe pagine.",
+      "error-not-pdf": "In questa fase sono supportati solo file PDF.",
+      "error-generic": "Caricamento fallito. Riprova."
+    }
   }
 }

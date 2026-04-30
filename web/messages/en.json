@@ -23,5 +23,22 @@
     "label": "Language",
     "en": "English",
     "it": "Italiano"
+  },
+  "tools": {
+    "ocr-to-markdown": {
+      "title": "OCR to Markdown",
+      "subtitle": "Drop a PDF. Get clean Markdown, page by page.",
+      "drop-here": "Drop a PDF here, or click to choose",
+      "drop-help": "PDF only · max {maxMb} MB · max {maxPages} pages",
+      "uploading": "Uploading…",
+      "starting": "Starting OCR…",
+      "page-of": "Page {page} of {filename}",
+      "stream-region": "OCR output, updates as pages are processed",
+      "no-output-yet": "Waiting for the first page…",
+      "error-too-large": "File too large.",
+      "error-too-many-pages": "PDF has too many pages.",
+      "error-not-pdf": "Only PDF files are supported in this phase.",
+      "error-generic": "Upload failed. Try again."
+    }
   }
 }
