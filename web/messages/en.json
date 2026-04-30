@@ -35,6 +35,7 @@
       "page-of": "Page {page} of {filename}",
       "stream-region": "OCR output, updates as pages are processed",
       "no-output-yet": "Waiting for the first page…",
+      "download": "Download {name} ({size})",
       "error-too-large": "File too large.",
       "error-too-many-pages": "PDF has too many pages.",
       "error-not-pdf": "Only PDF files are supported in this phase.",

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
 from src import jobs as jobs_mod
@@ -47,7 +47,7 @@ async def events(job_id: str) -> StreamingResponse:
         raise HTTPException(status_code=404, detail={"code": "input_not_found"})
 
     async def stream() -> Any:
-        async for event in emit(ocr_pipeline.run_stub(job_id, file_entry.path)):
+        async for event in emit(ocr_pipeline.run_real(job_id, file_entry.path)):
             yield event
 
     return StreamingResponse(
@@ -59,3 +59,13 @@ async def events(job_id: str) -> StreamingResponse:
             "Connection": "keep-alive",
         },
     )
+
+
+@router.get("/{job_id}/artifacts/{name}")
+async def artifact(job_id: str, name: str) -> FileResponse:
+    if "/" in name or ".." in name:
+        raise HTTPException(status_code=400, detail={"code": "bad_artifact_name"})
+    path = jobs_mod._root() / job_id / name
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail={"code": "artifact_not_found"})
+    return FileResponse(path, filename=name)

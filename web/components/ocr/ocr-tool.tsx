@@ -1,6 +1,6 @@
 "use client";
 
-import { Upload } from "lucide-react";
+import { Download, Upload } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { backendUrl } from "@/lib/api";
 
 type UploadResp = { file_id: string; filename: string; size: number; pages: number | null };
+type Artifact = { name: string; size: number; url: string };
 
 const MAX_MB = 50;
 const MAX_PAGES = 200;
@@ -25,6 +26,7 @@ type State = {
   totalPages: number;
   error: string | null;
   uploading: boolean;
+  artifacts: Artifact[];
 };
 
 const initial: State = {
@@ -36,6 +38,7 @@ const initial: State = {
   totalPages: 0,
   error: null,
   uploading: false,
+  artifacts: [],
 };
 
 export function OcrTool() {
@@ -145,7 +148,9 @@ export function OcrTool() {
       });
     });
 
-    es.addEventListener("done", () => {
+    es.addEventListener("done", (ev) => {
+      const data = JSON.parse((ev as MessageEvent).data) as { artifacts: Artifact[] };
+      setState((s) => ({ ...s, artifacts: data.artifacts ?? [] }));
       es.close();
       esRef.current = null;
     });
@@ -269,9 +274,29 @@ export function OcrTool() {
             </Card>
           </div>
 
-          <p className="text-muted-foreground text-xs">
-            {f.number(state.doneCount)} / {f.number(state.totalPages)}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-xs">
+              {f.number(state.doneCount)} / {f.number(state.totalPages)}
+            </p>
+            {state.artifacts.length > 0 && (
+              <div className="flex gap-2">
+                {state.artifacts.map((a) => (
+                  <a
+                    key={a.name}
+                    href={backendUrl(a.url)}
+                    download={a.name}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium"
+                  >
+                    <Download className="size-4" aria-hidden />
+                    {t("download", {
+                      name: a.name,
+                      size: f.number(a.size, { style: "unit", unit: "byte" }),
+                    })}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
         </>
       )}
     </main>
