@@ -2,25 +2,17 @@
   "name": "pdf-ocr",
   "version": "0.1.0",
   "private": true,
+  "description": "Local PDF OCR + tools webapp. Next.js + FastAPI + Ollama.",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "next": "16.2.4",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "dev": "concurrently -n web,api -c blue,magenta \"npm run dev:web\" \"npm run dev:api\"",
+    "dev:web": "npm --prefix web run dev",
+    "dev:api": "cd backend && uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload",
+    "build:web": "npm --prefix web run build",
+    "lint:web": "npm --prefix web run lint",
+    "test:api": "cd backend && uv run pytest",
+    "install:all": "npm --prefix web install && cd backend && uv sync"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.4",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "concurrently": "^9.1.0"
   }
 }

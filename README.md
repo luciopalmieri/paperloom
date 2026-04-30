@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# pdf-ocr
 
-## Getting Started
+Local web app that turns dirty scanned PDFs and images into clean
+Markdown using a locally-hosted GLM-OCR model (via Ollama), bundled with
+a configurable suite of PDF tools that can be chained over one or more
+input files.
 
-First, run the development server:
+One of the bundled tools is a **document anonymizer** built on
+[OpenAI Privacy Filter](https://github.com/openai/privacy-filter)
+(Apache 2.0). All inference runs locally — no input files ever leave
+the machine.
+
+## Status
+
+Phase 1a — skeletons live. `npm run dev` boots both processes; locale-prefixed routing (`/it`, `/en`), theme toggle, and `GET /api/health` work. OCR pipeline + tools + anonymizer land in later phases (see [`doc/phase-0.md`](doc/phase-0.md)).
+
+## Architecture
+
+Hybrid:
+
+- **Frontend** — Next.js 16 App Router, TypeScript, shadcn/ui,
+  Tailwind v4, `next-intl`, `next-themes`. Port 3000.
+- **Backend** — FastAPI (Python 3.11+), `uv` for dependencies.
+  Port 8000.
+- **Models** — Ollama (`glm-ocr:latest`) on port 11434 + OpenAI Privacy
+  Filter Python package (CPU by default).
+
+Full design: [`doc/prompt/architecture.md`](doc/prompt/architecture.md).
+
+## Requirements
+
+- Node 20+
+- Python 3.11+
+- [Ollama](https://ollama.ai) with `glm-ocr:latest` pulled
+- ~4 GB free disk for the OPF model checkpoint (downloaded on first
+  run)
+
+## Setup — native (default)
 
 ```bash
+# Pull the OCR model (needed from Phase 3 onwards; Phase 1a/2 work without it)
+ollama pull glm-ocr:latest
+
+# Install frontend + backend deps (one-shot helper)
+npm run install:all
+
+# Run both processes from the repo root
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Backend health: http://localhost:8000/api/health.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Setup — Docker (alternative, Phase 1b)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Ollama stays native on the host. Only `web` and `backend` containerise.
 
-## Learn More
+```bash
+# Make sure Ollama is already running natively
+ollama serve
 
-To learn more about Next.js, take a look at the following resources:
+# Boot the stack (dev overlay enables bind mounts + reload)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Containers reach Ollama via `host.docker.internal:11434`. See
+[`doc/phase-0.md`](doc/phase-0.md) §9 for the full dual-base-URL contract.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Documentation
 
-## Deploy on Vercel
+- [`doc/phase-0.md`](doc/phase-0.md) — locked execution plan: file
+  tree, dependency lists, OCR + anonymizer pipeline contracts, Docker
+  spec.
+- [`doc/prompt/PROMPT.md`](doc/prompt/PROMPT.md) — full project brief,
+  scope, success criteria, conversation contract.
+- [`doc/prompt/architecture.md`](doc/prompt/architecture.md) —
+  inter-process contract.
+- [`doc/prompt/shadcn-rules.md`](doc/prompt/shadcn-rules.md) — UI
+  conventions.
+- [`doc/prompt/i18n-rules.md`](doc/prompt/i18n-rules.md) — IT/EN
+  conventions.
+- [`doc/prompt/a11y-rules.md`](doc/prompt/a11y-rules.md) —
+  accessibility (WCAG 2.2 AA).
+- [`doc/prompt/anonymizer-rules.md`](doc/prompt/anonymizer-rules.md) —
+  OPF integration rules.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](LICENSE).
+
+This project depends on
+[OpenAI Privacy Filter](https://github.com/openai/privacy-filter),
+licensed under Apache 2.0.

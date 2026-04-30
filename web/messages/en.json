@@ -1,0 +1,27 @@
+{
+  "app": {
+    "title": "pdf-ocr",
+    "tagline": "Local PDF OCR + tools. No bytes leave your machine."
+  },
+  "home": {
+    "heading": "pdf-ocr",
+    "subheading": "Drop scanned PDFs and images. Get clean Markdown.",
+    "ocr-cta": "OCR a document",
+    "tools-cta": "Open the tool catalogue",
+    "health-label": "Backend health",
+    "health-checking": "Checking…",
+    "health-ok": "Online",
+    "health-down": "Offline"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "locale": {
+    "label": "Language",
+    "en": "English",
+    "it": "Italiano"
+  }
+}

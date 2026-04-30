@@ -1,0 +1,27 @@
+{
+  "app": {
+    "title": "pdf-ocr",
+    "tagline": "OCR PDF locale. Nessun byte lascia la tua macchina."
+  },
+  "home": {
+    "heading": "pdf-ocr",
+    "subheading": "Carica PDF scansionati e immagini. Ottieni Markdown pulito.",
+    "ocr-cta": "Esegui OCR su un documento",
+    "tools-cta": "Apri il catalogo strumenti",
+    "health-label": "Stato backend",
+    "health-checking": "Verifica in corso…",
+    "health-ok": "Online",
+    "health-down": "Offline"
+  },
+  "theme": {
+    "label": "Tema",
+    "light": "Chiaro",
+    "dark": "Scuro",
+    "system": "Sistema"
+  },
+  "locale": {
+    "label": "Lingua",
+    "en": "English",
+    "it": "Italiano"
+  }
+}
