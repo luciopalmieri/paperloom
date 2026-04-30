@@ -3,14 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "description": "Local PDF OCR + tools webapp. Next.js + FastAPI + Ollama.",
+  "workspaces": ["web"],
   "scripts": {
-    "dev": "concurrently -n web,api -c blue,magenta \"npm run dev:web\" \"npm run dev:api\"",
-    "dev:web": "npm --prefix web run dev",
-    "dev:api": "cd backend && uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload",
-    "build:web": "npm --prefix web run build",
-    "lint:web": "npm --prefix web run lint",
+    "dev": "concurrently -n web,api -c blue,magenta \"npm -w web run dev\" \"cd backend && uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload\"",
+    "build:web": "npm -w web run build",
+    "lint:web": "npm -w web run lint",
     "test:api": "cd backend && uv run pytest",
-    "install:all": "npm --prefix web install && cd backend && uv sync"
+    "install:all": "npm install && cd backend && uv sync"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
