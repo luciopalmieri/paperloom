@@ -1,0 +1,38 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_URL: "http://host.docker.internal:11434"
+      OPF_DEVICE: "cpu"
+      MAX_FILE_SIZE_MB: "50"
+      MAX_PDF_PAGES: "200"
+      MAX_FILES_PER_JOB: "10"
+      CORS_ORIGIN: "http://localhost:3000"
+    volumes:
+      - opf-cache:/root/.opf
+      - pdf-ocr-tmp:/tmp/pdf-ocr
+    extra_hosts:
+      # macOS Docker Desktop resolves host.docker.internal automatically;
+      # this entry adds Linux parity so the same compose file works there.
+      - "host.docker.internal:host-gateway"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: runner
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_URL_INTERNAL: "http://backend:8000"
+      NEXT_PUBLIC_BACKEND_URL: "http://localhost:8000"
+    depends_on:
+      - backend
+
+volumes:
+  opf-cache:
+  pdf-ocr-tmp:

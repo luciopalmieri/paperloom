@@ -1,0 +1,18 @@
+services:
+  backend:
+    command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+      - ./backend/pyproject.toml:/app/pyproject.toml
+
+  web:
+    build:
+      target: dev
+    command: ["npm", "run", "dev"]
+    volumes:
+      - ./web:/app
+      # Anonymous volumes preserve container-installed artefacts that the
+      # host bind would otherwise hide (slow on macOS, missing on Linux).
+      - /app/node_modules
+      - /app/.next
