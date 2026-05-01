@@ -4,31 +4,27 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
-from src import jobs as jobs_mod
 from src.ocr import ollama, render, stub
 from src.ocr.prompts import OCR_PROMPT
-from src.zip import build_zip
 
 
 async def run_real(
-    job_id: str, pdf_path: Path
+    job_id: str, pdf_path: Path, out_dir: Path
 ) -> AsyncIterator[tuple[str, dict[str, Any]]]:
-    """Real Ollama OCR pipeline.
+    """OCR a PDF via Ollama into `out_dir/out.md` plus `out_dir/images/`.
 
-    Renders each page → PNG via pypdfium2, streams Markdown chunks from
-    GLM-OCR via Ollama /api/generate, writes out.md + (empty for now)
-    images/ under <jobId>/out/, bundles a zip artifact, and emits SSE
-    events. Figure cropping is a deferred concern (phase-0 §8.2): the
-    OCR prompt's [[FIGURE:fig-N]] placeholders pass through verbatim.
+    Yields per-page Markdown chunks via SSE-shaped events. Figure
+    placeholders [[FIGURE:fig-N]] pass through verbatim — cropping is
+    deferred per phase-0 §8.2. Final `node.end` event lists the
+    written output files (consumed by the chain executor).
     """
-    pages = render.page_count(pdf_path)
-    out_root = jobs_mod._root() / job_id / "out"
-    images_dir = out_root / "images"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    images_dir = out_dir / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
 
-    yield "node.start", {"job_id": job_id, "tool": "ocr-to-markdown", "pages": pages}
-
+    pages = render.page_count(pdf_path)
     page_buffers: dict[int, str] = {}
+
     for page in range(1, pages + 1):
         yield "progress", {
             "job_id": job_id,
@@ -64,27 +60,14 @@ async def run_real(
         }
 
     md_text = "\n\n".join(page_buffers[p] for p in sorted(page_buffers))
-    (out_root / "out.md").write_text(md_text, encoding="utf-8")
-
-    zip_path = out_root.parent / "out.zip"
-    build_zip(out_root, zip_path)
-
-    yield "done", {
-        "job_id": job_id,
-        "artifacts": [
-            {
-                "name": "out.zip",
-                "size": zip_path.stat().st_size,
-                "url": f"/api/jobs/{job_id}/artifacts/out.zip",
-            }
-        ],
-    }
+    md_path = out_dir / "out.md"
+    md_path.write_text(md_text, encoding="utf-8")
 
 
 async def run_stub(
     job_id: str, pdf_path: Path
 ) -> AsyncIterator[tuple[str, dict[str, Any]]]:
-    """Phase 2 stub kept for tests / offline development."""
+    """Phase 2 stub kept for offline development."""
     pages = render.page_count(pdf_path)
     yield "node.start", {"job_id": job_id, "tool": "ocr-to-markdown", "pages": pages}
 

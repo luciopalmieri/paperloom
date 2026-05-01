@@ -1,21 +1,37 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
+from src import chain as chain_mod
 from src import jobs as jobs_mod
-from src.ocr import pipeline as ocr_pipeline
 from src.sse import emit
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 
 class CreateJobBody(BaseModel):
-    tools: list[str]
+    tools: list[dict[str, Any]]
     inputs: list[str]
+
+    @field_validator("tools", mode="before")
+    @classmethod
+    def _normalise(cls, v: Any) -> list[dict[str, Any]]:
+        if not isinstance(v, list):
+            return v
+        out: list[dict[str, Any]] = []
+        for item in v:
+            if isinstance(item, str):
+                out.append({"slug": item, "params": {}})
+            elif isinstance(item, dict):
+                out.append({"slug": item.get("slug", ""), "params": item.get("params", {})})
+            else:
+                out.append({"slug": "", "params": {}})
+        return out
 
 
 @router.post("")
@@ -28,26 +44,23 @@ async def create(body: CreateJobBody) -> dict[str, str]:
 
 @router.get("/{job_id}/events")
 async def events(job_id: str) -> StreamingResponse:
-    # Phase 2 stub: only the ocr-to-markdown tool exists. Resolve the first
-    # input file, run the stub pipeline, stream NDJSON-as-SSE.
     job_root = jobs_mod._root() / job_id
     if not job_root.is_dir():
         raise HTTPException(status_code=404, detail={"code": "job_not_found"})
 
-    import json
     meta = json.loads((job_root / "job.json").read_text())
-    tools: list[str] = meta["tools"]
+    chain: list[dict[str, Any]] = meta["chain"]
     inputs: list[str] = meta["inputs"]
 
-    if tools != ["ocr-to-markdown"]:
-        raise HTTPException(status_code=400, detail={"code": "unsupported_chain"})
-
-    file_entry = jobs_mod.find_file(inputs[0])
-    if not file_entry:
-        raise HTTPException(status_code=404, detail={"code": "input_not_found"})
+    input_paths = []
+    for file_id in inputs:
+        entry = jobs_mod.find_file(file_id)
+        if entry is None:
+            raise HTTPException(status_code=404, detail={"code": "input_not_found"})
+        input_paths.append(entry.path)
 
     async def stream() -> Any:
-        async for event in emit(ocr_pipeline.run_real(job_id, file_entry.path)):
+        async for event in emit(chain_mod.run(job_id, chain, input_paths)):
             yield event
 
     return StreamingResponse(

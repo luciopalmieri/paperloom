@@ -25,6 +25,36 @@
     "it": "Italiano"
   },
   "tools": {
+    "catalogue": {
+      "title": "Tools",
+      "subtitle": "Pick a tool, or chain them on the chain page.",
+      "section-conversion": "Document conversion",
+      "section-manipulation": "PDF manipulation",
+      "section-ai": "OCR & AI",
+      "available": "Available",
+      "coming-soon": "Coming soon"
+    },
+    "names": {
+      "ocr-to-markdown": "OCR to Markdown",
+      "anonymize": "Anonymize",
+      "pdf-to-images": "PDF to images",
+      "images-to-pdf": "Images to PDF",
+      "pdf-to-text": "PDF to text",
+      "pdf-to-html": "PDF to HTML",
+      "html-to-pdf": "HTML to PDF",
+      "markdown-to-pdf": "Markdown to PDF",
+      "markdown-to-html": "Markdown to HTML",
+      "merge-pdfs": "Merge PDFs",
+      "split-pdf": "Split PDF",
+      "compress-pdf": "Compress PDF",
+      "rotate-pages": "Rotate pages",
+      "reorder-pages": "Reorder pages",
+      "delete-pages": "Delete pages",
+      "extract-pages": "Extract pages",
+      "add-page-numbers": "Add page numbers",
+      "add-watermark": "Add watermark",
+      "strip-metadata": "Strip metadata"
+    },
     "ocr-to-markdown": {
       "title": "OCR to Markdown",
       "subtitle": "Drop a PDF. Get clean Markdown, page by page.",

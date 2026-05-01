@@ -39,13 +39,12 @@ function Home() {
         >
           {t("ocr-cta")}
         </Link>
-        <a
-          className="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium opacity-50"
-          href="#"
-          aria-disabled
+        <Link
+          href="/tools"
+          className="border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium"
         >
           {t("tools-cta")}
-        </a>
+        </Link>
       </section>
     </main>
   );

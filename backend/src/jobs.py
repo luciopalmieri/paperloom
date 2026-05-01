@@ -57,18 +57,19 @@ def find_file(file_id: str) -> FileEntry | None:
     return FileEntry(file_id=file_id, filename=p.name, size=p.stat().st_size, pages=None, path=p)
 
 
-def create_job(tools: list[str], inputs: list[str]) -> Job:
+def create_job(chain: list[dict[str, object]], inputs: list[str]) -> Job:
     job_id = uuid.uuid4().hex
     root = _root() / job_id
     (root / "inputs").mkdir(parents=True, exist_ok=True)
     (root / "work").mkdir(parents=True, exist_ok=True)
     (root / "out").mkdir(parents=True, exist_ok=True)
-    job = Job(job_id=job_id, tools=tools, inputs=inputs, root=root, created_at=time.time())
+    tool_slugs = [str(node.get("slug", "")) for node in chain]
+    job = Job(job_id=job_id, tools=tool_slugs, inputs=inputs, root=root, created_at=time.time())
     (root / "job.json").write_text(
         json.dumps(
             {
                 "job_id": job_id,
-                "tools": tools,
+                "chain": chain,
                 "inputs": inputs,
                 "created_at": job.created_at,
             }

@@ -25,6 +25,36 @@
     "it": "Italiano"
   },
   "tools": {
+    "catalogue": {
+      "title": "Strumenti",
+      "subtitle": "Scegli uno strumento, o concatenali nella pagina chain.",
+      "section-conversion": "Conversione documenti",
+      "section-manipulation": "Manipolazione PDF",
+      "section-ai": "OCR & AI",
+      "available": "Disponibile",
+      "coming-soon": "In arrivo"
+    },
+    "names": {
+      "ocr-to-markdown": "OCR in Markdown",
+      "anonymize": "Anonimizza",
+      "pdf-to-images": "PDF in immagini",
+      "images-to-pdf": "Immagini in PDF",
+      "pdf-to-text": "PDF in testo",
+      "pdf-to-html": "PDF in HTML",
+      "html-to-pdf": "HTML in PDF",
+      "markdown-to-pdf": "Markdown in PDF",
+      "markdown-to-html": "Markdown in HTML",
+      "merge-pdfs": "Unisci PDF",
+      "split-pdf": "Dividi PDF",
+      "compress-pdf": "Comprimi PDF",
+      "rotate-pages": "Ruota pagine",
+      "reorder-pages": "Riordina pagine",
+      "delete-pages": "Elimina pagine",
+      "extract-pages": "Estrai pagine",
+      "add-page-numbers": "Aggiungi numeri di pagina",
+      "add-watermark": "Aggiungi filigrana",
+      "strip-metadata": "Rimuovi metadati"
+    },
     "ocr-to-markdown": {
       "title": "OCR in Markdown",
       "subtitle": "Carica un PDF. Ottieni Markdown pulito, pagina per pagina.",
