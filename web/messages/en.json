@@ -66,7 +66,8 @@
       "status-error": "Failed",
       "events": "Events",
       "progress": {
-        "loading_opf": "Loading OPF model (first run downloads ~4 GB into ~/.opf/privacy_filter)…",
+        "downloading_opf": "Downloading OPF model (~4 GB) into ~/.opf/privacy_filter — one-time, runs only on first ever use…",
+        "loading_opf": "Loading OPF model into memory…",
         "detecting": "Running anonymizer detection on {filename}…",
         "writing_report": "Writing redactions report for {filename}…"
       },

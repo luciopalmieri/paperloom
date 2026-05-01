@@ -66,7 +66,8 @@
       "status-error": "Errore",
       "events": "Eventi",
       "progress": {
-        "loading_opf": "Caricamento modello OPF (al primo avvio scarica ~4 GB in ~/.opf/privacy_filter)…",
+        "downloading_opf": "Download modello OPF (~4 GB) in ~/.opf/privacy_filter — una tantum, solo al primissimo utilizzo…",
+        "loading_opf": "Caricamento modello OPF in memoria…",
         "detecting": "Anonimizzazione di {filename} in corso…",
         "writing_report": "Scrittura report redazioni per {filename}…"
       },

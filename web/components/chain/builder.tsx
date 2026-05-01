@@ -275,7 +275,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
         filename?: string;
       };
       const phase = data.phase ?? "";
-      const known = ["loading_opf", "detecting", "writing_report"] as const;
+      const known = ["downloading_opf", "loading_opf", "detecting", "writing_report"] as const;
       if ((known as readonly string[]).includes(phase)) {
         const human = t(
           (`progress.${phase}` as unknown) as Parameters<typeof t>[0],

@@ -10,6 +10,22 @@ from src.config import settings
 from src.tools import register
 
 _TEXT_EXT = {".md", ".markdown", ".txt"}
+_OPF_CHECKPOINT_DIR = Path.home() / ".opf" / "privacy_filter"
+
+
+def _opf_phase(preset: str, device: str) -> str:
+    """Pick the most accurate label for the next anonymize step.
+
+    The OPF instance lives in module-level cache, so a process restart
+    (e.g. uvicorn --reload after a backend edit) wipes it even though
+    the ~4 GB checkpoint is still on disk. Distinguish the two costs:
+    a fresh download vs. a RAM reload. Once cached, skip the load
+    label entirely and report detection directly.
+    """
+    if detect.is_loaded(preset, device):
+        return "detecting"
+    has_checkpoint = _OPF_CHECKPOINT_DIR.is_dir() and any(_OPF_CHECKPOINT_DIR.iterdir())
+    return "loading_opf" if has_checkpoint else "downloading_opf"
 
 
 @register("anonymize")
@@ -56,16 +72,15 @@ async def run(
                 "suggested_preset": "recall",
             }
 
-        # Surface the expensive phase to the client. First job pays the
-        # OPF model download (~4 GB into ~/.opf/privacy_filter) plus a
-        # cold load; subsequent jobs reuse the cached instance and only
-        # see "detecting".
-        opf_loaded = detect.is_loaded(preset, settings.opf_device)
+        # Surface the expensive phase to the client. The first ever
+        # job downloads ~4 GB into ~/.opf/privacy_filter; later jobs
+        # in a fresh process pay only the cold RAM load; jobs in a
+        # warm process skip both.
         yield "node.progress", {
             "job_id": job_id,
             "step": step,
             "tool": "anonymize",
-            "phase": "detecting" if opf_loaded else "loading_opf",
+            "phase": _opf_phase(preset, settings.opf_device),
             "filename": inp.name,
         }
 
