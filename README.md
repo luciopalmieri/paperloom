@@ -12,7 +12,23 @@ the machine.
 
 ## Status
 
-Phase 1a — skeletons live. `npm run dev` boots both processes; locale-prefixed routing (`/it`, `/en`), theme toggle, and `GET /api/health` work. OCR pipeline + tools + anonymizer land in later phases (see [`doc/phase-0.md`](doc/phase-0.md)).
+All phases from [`doc/phase-0.md`](doc/phase-0.md) are shipped. The
+catalogue exposes **19 tools** wired through a generic chain executor:
+
+- 1 streaming OCR tool (Ollama / GLM-OCR).
+- 1 text anonymizer (OpenAI Privacy Filter, 8 categories verbatim).
+- 17 deterministic PDF / Markdown / HTML / image converters.
+
+Backend ships 32 passing tests (plus 2 weasyprint smoke tests that
+skip until the native libs are installed). Web typecheck and ESLint
+flat config are clean.
+
+Open follow-ups (not blockers): figure cropping in OCR output (the
+prompt already emits `[[FIGURE:fig-N]]` placeholders), OPF preset
+calibration JSONs (the `recall` preset currently mirrors `balanced`
+until OPF publishes canonical files — see `doc/phase-0.md` §5.4.1),
+and dedicated single-tool pages for tools that today reuse the
+chain builder.
 
 ## Architecture
 
@@ -49,7 +65,7 @@ Full design: [`doc/prompt/architecture.md`](doc/prompt/architecture.md).
 ## Setup — native (default)
 
 ```bash
-# Pull the OCR model (needed from Phase 3 onwards; Phase 1a/2 work without it)
+# Pull the OCR model
 ollama pull glm-ocr:latest
 
 # Install frontend + backend deps (one-shot helper)
@@ -59,7 +75,30 @@ npm run install:all
 npm run dev
 ```
 
-Open http://localhost:3000. Backend health: http://localhost:8000/api/health.
+Open http://localhost:3000. Backend health:
+http://localhost:8000/api/health.
+
+### Quick paths
+
+- `/tools` — catalogue of every wired tool, AI badge on the AI ones.
+- `/tools/ocr-to-markdown` — split-view OCR with streaming Markdown.
+- `/tools/chain` — sequential chain builder (Alt+Up / Alt+Down to
+  reorder, Delete to remove the focused node).
+- Catalogue tiles deep-link: `/tools/chain?initial=<slug>` opens the
+  builder with that tool pre-added.
+
+### Success scenario (end-to-end)
+
+```text
+1. /tools/chain
+2. Upload a scanned PDF.
+3. Add nodes in order: pdf-to-images → ocr-to-markdown → anonymize.
+4. Run.
+5. Download out.zip — contains out.md, images/, redactions.report.json.
+```
+
+Requires Ollama running with `glm-ocr:latest` and OPF installed
+(see Requirements).
 
 ## Setup — Docker (alternative, Phase 1b)
 
