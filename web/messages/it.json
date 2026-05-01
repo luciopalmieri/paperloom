@@ -50,6 +50,7 @@
       "drop-files": "Trascina i file qui, o clicca per sceglierli",
       "drop-hint": "Fino a {max} file. Gli strumenti che richiedono PDF accettano solo PDF.",
       "selected-files": "{count, plural, one {# file} other {# file}}",
+      "pages-count": "{count, plural, one {# pagina} other {# pagine}}",
       "remove-file": "Rimuovi file",
       "add-tool": "Aggiungi strumento",
       "no-nodes": "Nessuno strumento ancora. Aggiungi il primo.",

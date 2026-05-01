@@ -50,6 +50,7 @@
       "drop-files": "Drop files here, or click to choose",
       "drop-hint": "Up to {max} files. Tools that need a PDF accept PDFs only.",
       "selected-files": "{count, plural, one {# file} other {# files}}",
+      "pages-count": "{count, plural, one {# page} other {# pages}}",
       "remove-file": "Remove file",
       "add-tool": "Add tool",
       "no-nodes": "No tools yet. Add the first one.",

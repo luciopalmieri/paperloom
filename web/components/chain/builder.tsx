@@ -351,7 +351,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
                     <code className="text-xs">{f.filename}</code>
                     {f.pages !== null && (
                       <span className="text-muted-foreground ml-2 text-xs">
-                        {f.pages} pp
+                        {t("pages-count", { count: f.pages })}
                       </span>
                     )}
                   </span>
