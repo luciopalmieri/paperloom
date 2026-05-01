@@ -51,6 +51,7 @@ dist/
 .idea/
 .vscode/
 !.vscode/settings.json.example
+.claude/
 
 # Logs
 *.log
