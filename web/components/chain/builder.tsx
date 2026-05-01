@@ -1,10 +1,25 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Download, Plus, Trash2, Upload } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Download,
+  Plus,
+  RotateCw,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { OpfInstallBanner } from "@/components/anonymize/install-banner";
+import {
+  EventTimeline,
+  type TimelineItem,
+  type TimelineItemStatus,
+} from "@/components/chain/event-timeline";
 import { AiBadge } from "@/components/ui/ai-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -107,9 +122,10 @@ const TOOL_BY_SLUG = new Map(TOOLS.map((t) => [t.slug, t]));
 type FileState = { file_id: string; filename: string; size: number; pages: number | null };
 type NodeState = { uid: string; slug: string; params: Record<string, string> };
 type Artifact = { name: string; size: number; url: string };
-type Status = "idle" | "running" | "done" | "error";
+type Status = "idle" | "running" | "done" | "error" | "cancelled";
 
 const newUid = () => Math.random().toString(36).slice(2, 9);
+const DRAFT_KEY = "paperloom.chain.draft.v1";
 
 function defaultParams(def: ToolDef): Record<string, string> {
   const out: Record<string, string> = {};
@@ -142,11 +158,18 @@ function paramsForBackend(node: NodeState): Record<string, unknown> {
   return out;
 }
 
-export function ChainBuilder({ initial }: { initial?: string }) {
+export function ChainBuilder({
+  initial,
+  fromFileId,
+}: {
+  initial?: string;
+  fromFileId?: string;
+}) {
   const t = useTranslations("tools.chain");
   const tNames = useTranslations("tools.names");
   const tParams = useTranslations("tools.params");
   const tCat = useTranslations("tools.catalogue");
+  const tAnon = useTranslations("tools.anonymize");
 
   const initialUid = useId();
   const initialNode = initial && TOOL_BY_SLUG.has(initial)
@@ -157,26 +180,123 @@ export function ChainBuilder({ initial }: { initial?: string }) {
   const [nodes, setNodes] = useState<NodeState[]>(initialNode);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [events, setEvents] = useState<string[]>([]);
+  const [rawEvents, setRawEvents] = useState<string[]>([]);
+  const [timeline, setTimeline] = useState<TimelineItem[]>([]);
+  const [liveAnnouncement, setLiveAnnouncement] = useState<string>("");
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
   const [nonEnWarning, setNonEnWarning] = useState<string | null>(null);
-  const tAnon = useTranslations("tools.anonymize");
+  const [hydrated, setHydrated] = useState(false);
+
   const hasAnonymize = nodes.some((n) => n.slug === "anonymize");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const esRef = useRef<EventSource | null>(null);
+  const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Restore draft on mount (skip when ?initial or ?from provided — explicit
+  // user intent). When ?from is provided, prefill that file via the metadata
+  // endpoint so the user does not have to re-upload.
+  useEffect(() => {
+    if (initial || fromFileId) {
+      if (fromFileId) {
+        let cancelled = false;
+        (async () => {
+          try {
+            const r = await fetch(backendUrl(`/api/files/${fromFileId}`));
+            if (!r.ok) return;
+            const data = (await r.json()) as FileState;
+            if (cancelled) return;
+            setFiles([data]);
+          } catch {
+            // ignore — user can still upload manually
+          }
+        })();
+        setHydrated(true);
+        return () => {
+          cancelled = true;
+        };
+      }
+      setHydrated(true);
+      return;
+    }
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { files?: FileState[]; nodes?: NodeState[] };
+        if (parsed.files?.length || parsed.nodes?.length) {
+          setFiles(parsed.files ?? []);
+          setNodes(parsed.nodes ?? []);
+          toast.success(t("draft-restored"), {
+            action: {
+              label: t("draft-discard"),
+              onClick: () => {
+                setFiles([]);
+                setNodes([]);
+                window.localStorage.removeItem(DRAFT_KEY);
+              },
+            },
+          });
+        }
+      }
+    } catch {
+      // ignore
+    }
+    setHydrated(true);
+  }, [initial, fromFileId, t]);
+
+  // Persist draft.
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      if (files.length === 0 && nodes.length === 0) {
+        window.localStorage.removeItem(DRAFT_KEY);
+      } else {
+        window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ files, nodes }));
+      }
+    } catch {
+      // ignore
+    }
+  }, [files, nodes, hydrated]);
 
   useEffect(() => () => esRef.current?.close(), []);
+
+  // Keyboard shortcuts: Cmd/Ctrl+Enter to run, Esc to cancel.
+  // Refs avoid stale closures.
+  const runRef = useRef<() => void>(() => {});
+  const cancelRef = useRef<() => void>(() => {});
+  const statusRef = useRef<Status>("idle");
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isField =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable;
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (statusRef.current !== "running") runRef.current();
+        return;
+      }
+      if (e.key === "Escape" && !isField && statusRef.current === "running") {
+        e.preventDefault();
+        cancelRef.current();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const upload = async (f: File) => {
     const fd = new FormData();
     fd.append("file", f);
     const r = await fetch(backendUrl("/api/files"), { method: "POST", body: fd });
     if (!r.ok) {
-      setError(t("error-generic"));
+      setError(t("error-upload-failed", { name: f.name }));
+      toast.error(t("error-upload-failed", { name: f.name }));
       return;
     }
     const data = (await r.json()) as FileState;
     setFiles((prev) => [...prev, data]);
+    toast.success(t("upload-success", { name: data.filename }));
   };
 
   const onUpload = async (selected: FileList | File[]) => {
@@ -188,7 +308,9 @@ export function ChainBuilder({ initial }: { initial?: string }) {
   const addNode = (slug: string) => {
     const def = TOOL_BY_SLUG.get(slug);
     if (!def) return;
-    setNodes((prev) => [...prev, { uid: newUid(), slug, params: defaultParams(def) }]);
+    const newNode = { uid: newUid(), slug, params: defaultParams(def) };
+    setNodes((prev) => [...prev, newNode]);
+    toast.success(t("tool-added", { name: tNames(slug as Parameters<typeof tNames>[0]) }));
   };
 
   const moveNode = (idx: number, dir: -1 | 1) => {
@@ -197,6 +319,8 @@ export function ChainBuilder({ initial }: { initial?: string }) {
       if (j < 0 || j >= prev.length) return prev;
       const next = [...prev];
       [next[idx], next[j]] = [next[j], next[idx]];
+      const movedUid = next[j].uid;
+      requestAnimationFrame(() => nodeRefs.current[movedUid]?.focus());
       return next;
     });
   };
@@ -208,6 +332,54 @@ export function ChainBuilder({ initial }: { initial?: string }) {
     setNodes((prev) =>
       prev.map((n, i) => (i === idx ? { ...n, params: { ...n.params, [key]: value } } : n)),
     );
+
+  const startOver = () => {
+    esRef.current?.close();
+    esRef.current = null;
+    setFiles([]);
+    setNodes([]);
+    setStatus("idle");
+    setError(null);
+    setRawEvents([]);
+    setTimeline([]);
+    setArtifacts([]);
+    setNonEnWarning(null);
+    setLiveAnnouncement("");
+    try {
+      window.localStorage.removeItem(DRAFT_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
+  const cancelRun = () => {
+    if (status !== "running") return;
+    esRef.current?.close();
+    esRef.current = null;
+    setStatus("cancelled");
+    statusRef.current = "cancelled";
+    setTimeline((prev) =>
+      prev.map((item) =>
+        item.status === "active"
+          ? { ...item, status: "error", endedAt: Date.now(), sublabel: t("event-cancelled") }
+          : item,
+      ),
+    );
+    toast.info(t("event-cancelled-toast"));
+  };
+
+  const updateActiveTimeline = useCallback(
+    (mutate: (item: TimelineItem) => TimelineItem) => {
+      setTimeline((prev) => {
+        const idx = prev.findIndex((it) => it.status === "active");
+        if (idx < 0) return prev;
+        const next = [...prev];
+        next[idx] = mutate(next[idx]);
+        return next;
+      });
+    },
+    [],
+  );
 
   const run = async () => {
     setError(null);
@@ -221,9 +393,19 @@ export function ChainBuilder({ initial }: { initial?: string }) {
     }
 
     setStatus("running");
-    setEvents([]);
+    statusRef.current = "running";
+    setRawEvents([]);
     setArtifacts([]);
     setNonEnWarning(null);
+    setLiveAnnouncement("");
+
+    // Seed timeline: one row per node, all pending.
+    const seeded: TimelineItem[] = nodes.map((n, i) => ({
+      id: n.uid,
+      label: `${i + 1}. ${tNames(n.slug as Parameters<typeof tNames>[0])}`,
+      status: "pending" as TimelineItemStatus,
+    }));
+    setTimeline(seeded);
 
     const body = {
       tools: nodes.map((n) => ({ slug: n.slug, params: paramsForBackend(n) })),
@@ -238,13 +420,13 @@ export function ChainBuilder({ initial }: { initial?: string }) {
         body: JSON.stringify(body),
       });
       if (!r.ok) {
-        setError(t("error-generic"));
+        setError(r.status >= 500 ? t("error-server") : t("error-bad-request"));
         setStatus("error");
         return;
       }
       jobId = (await r.json()).job_id as string;
     } catch {
-      setError(t("error-generic"));
+      setError(t("error-server"));
       setStatus("error");
       return;
     }
@@ -252,28 +434,81 @@ export function ChainBuilder({ initial }: { initial?: string }) {
     const es = new EventSource(backendUrl(`/api/jobs/${jobId}/events`));
     esRef.current = es;
 
-    const handle = (name: string, payload: unknown) => {
-      setEvents((prev) => [...prev, `${name}: ${JSON.stringify(payload)}`].slice(-100));
+    const pushRaw = (name: string, payload: unknown) => {
+      setRawEvents((prev) => [...prev, `${name}: ${JSON.stringify(payload)}`].slice(-100));
     };
 
-    for (const evt of [
-      "node.start",
-      "node.end",
-      "progress",
-      "ocr.page",
-      "anonymize.span",
-    ] as const) {
-      es.addEventListener(evt, (ev) => {
-        const data = JSON.parse((ev as MessageEvent).data);
-        handle(evt, data);
+    es.addEventListener("node.start", (ev) => {
+      const data = JSON.parse((ev as MessageEvent).data) as { tool?: string; index?: number };
+      pushRaw("node.start", data);
+      const idx = data.index ?? 0;
+      setTimeline((prev) => {
+        const next = prev.map((it, i) =>
+          i < idx
+            ? { ...it, status: "done" as TimelineItemStatus, endedAt: it.endedAt ?? Date.now() }
+            : i === idx
+              ? { ...it, status: "active" as TimelineItemStatus, startedAt: Date.now() }
+              : it,
+        );
+        return next;
       });
-    }
+      const slug = data.tool ?? "";
+      const name = TOOL_BY_SLUG.has(slug)
+        ? tNames(slug as Parameters<typeof tNames>[0])
+        : slug;
+      setLiveAnnouncement(t("event-starting", { name }));
+    });
+
+    es.addEventListener("node.end", (ev) => {
+      const data = JSON.parse((ev as MessageEvent).data) as { tool?: string; index?: number };
+      pushRaw("node.end", data);
+      const idx = data.index ?? 0;
+      setTimeline((prev) =>
+        prev.map((it, i) =>
+          i === idx
+            ? {
+                ...it,
+                status: "done" as TimelineItemStatus,
+                endedAt: Date.now(),
+                sublabel: undefined,
+              }
+            : it,
+        ),
+      );
+    });
+
+    es.addEventListener("progress", (ev) => {
+      const data = JSON.parse((ev as MessageEvent).data);
+      pushRaw("progress", data);
+    });
+
+    es.addEventListener("ocr.page", (ev) => {
+      const data = JSON.parse((ev as MessageEvent).data) as {
+        page: number;
+        total?: number;
+        page_done?: boolean;
+      };
+      pushRaw("ocr.page", data);
+      if (data.page_done && data.total) {
+        updateActiveTimeline((item) => ({
+          ...item,
+          sublabel: t("event-processing", { page: data.page, total: data.total ?? 0 }),
+        }));
+      }
+    });
+
+    es.addEventListener("anonymize.span", (ev) => {
+      const data = JSON.parse((ev as MessageEvent).data);
+      pushRaw("anonymize.span", data);
+    });
+
     es.addEventListener("node.progress", (ev) => {
       const data = JSON.parse((ev as MessageEvent).data) as {
         tool?: string;
         phase?: string;
         filename?: string;
       };
+      pushRaw("node.progress", data);
       const phase = data.phase ?? "";
       const known = ["downloading_opf", "loading_opf", "detecting", "writing_report"] as const;
       if ((known as readonly string[]).includes(phase)) {
@@ -281,53 +516,76 @@ export function ChainBuilder({ initial }: { initial?: string }) {
           (`progress.${phase}` as unknown) as Parameters<typeof t>[0],
           { filename: data.filename ?? "" },
         );
-        setEvents((prev) => [...prev, human].slice(-100));
-      } else {
-        handle("node.progress", data);
+        updateActiveTimeline((item) => ({ ...item, sublabel: human }));
+        setLiveAnnouncement(human);
       }
     });
+
     es.addEventListener("anonymize.warn", (ev) => {
       const data = JSON.parse((ev as MessageEvent).data) as {
         code: string;
         suggested_preset?: string;
       };
-      handle("anonymize.warn", data);
+      pushRaw("anonymize.warn", data);
       if (data.code === "non_en_input") {
         setNonEnWarning(data.suggested_preset ?? "recall");
       }
     });
+
     es.addEventListener("error", (ev) => {
       const me = ev as MessageEvent;
       if (typeof me.data === "string" && me.data.length > 0) {
-        // Named SSE error from the backend (chain step rejected). Show
-        // the server message and stop reconnecting — otherwise the
-        // GET /events handler keeps re-running the chain on every retry.
         let message = t("error-generic");
         try {
           const data = JSON.parse(me.data) as { code?: string; message?: string };
           message = data.message ?? data.code ?? message;
         } catch {
-          // ignore parse error, use generic
+          // use generic
         }
         setError(message);
         setStatus("error");
+        setTimeline((prev) =>
+          prev.map((it) =>
+            it.status === "active"
+              ? { ...it, status: "error" as TimelineItemStatus, endedAt: Date.now() }
+              : it,
+          ),
+        );
         es.close();
         esRef.current = null;
         return;
       }
       if (es.readyState === EventSource.CLOSED) {
-        setError(t("error-generic"));
+        setError(t("error-reconnect"));
         setStatus("error");
       }
     });
+
     es.addEventListener("done", (ev) => {
       const data = JSON.parse((ev as MessageEvent).data) as { artifacts: Artifact[] };
+      pushRaw("done", data);
       setArtifacts(data.artifacts ?? []);
       setStatus("done");
+      statusRef.current = "done";
+      setTimeline((prev) =>
+        prev.map((it) =>
+          it.status === "active" || it.status === "pending"
+            ? { ...it, status: "done" as TimelineItemStatus, endedAt: Date.now() }
+            : it,
+        ),
+      );
+      setLiveAnnouncement(t("run-success"));
+      toast.success(t("run-success"));
       es.close();
       esRef.current = null;
     });
   };
+
+  runRef.current = run;
+  cancelRef.current = cancelRun;
+  useEffect(() => {
+    statusRef.current = status;
+  }, [status]);
 
   const sortedTools = useMemo(
     () =>
@@ -339,8 +597,21 @@ export function ChainBuilder({ initial }: { initial?: string }) {
     [tNames],
   );
 
+  const statusBadgeVariant: "outline" | "destructive" | "secondary" =
+    status === "error" || status === "cancelled"
+      ? "destructive"
+      : status === "done"
+        ? "secondary"
+        : "outline";
+
+  const statusLabel =
+    status === "cancelled" ? t("status-cancelled") : t(`status-${status}`);
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-6 py-8">
+    <main
+      id="main"
+      className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-6 py-8 pb-28 sm:pb-8"
+    >
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
@@ -363,7 +634,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
               e.preventDefault();
               if (e.dataTransfer.files?.length) onUpload(e.dataTransfer.files);
             }}
-            className="border-input hover:bg-muted flex h-24 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed text-sm transition-colors"
+            className="border-input hover:bg-muted focus-visible:ring-ring/50 flex h-32 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed text-sm transition-colors focus-visible:ring-2 focus-visible:outline-none sm:h-24"
           >
             <Upload className="text-muted-foreground size-5" aria-hidden />
             <span>{t("drop-files")}</span>
@@ -374,6 +645,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
               ref={fileInputRef}
               type="file"
               multiple
+              accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,image/tiff,image/bmp,image/gif"
               className="hidden"
               onChange={(e) => {
                 if (e.target.files?.length) onUpload(e.target.files);
@@ -411,8 +683,8 @@ export function ChainBuilder({ initial }: { initial?: string }) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between text-sm font-medium">
-            <span>Chain</span>
+          <CardTitle className="flex flex-col items-stretch gap-2 text-sm font-medium sm:flex-row sm:items-center sm:justify-between">
+            <span>{t("steps-title")}</span>
             <ToolPicker
               label={t("add-tool")}
               tools={sortedTools}
@@ -427,12 +699,21 @@ export function ChainBuilder({ initial }: { initial?: string }) {
           )}
           {nodes.map((node, idx) => {
             const def = TOOL_BY_SLUG.get(node.slug)!;
+            const name = tNames(node.slug as Parameters<typeof tNames>[0]);
             return (
               <div
                 key={node.uid}
-                className="border-input rounded-lg border p-3"
+                ref={(el) => {
+                  nodeRefs.current[node.uid] = el;
+                }}
+                role="group"
+                aria-label={t("node-label", { n: idx + 1, name })}
+                aria-roledescription={t("node-roledescription")}
+                className="border-input focus-visible:ring-ring/50 rounded-lg border p-3 focus-visible:ring-2 focus-visible:outline-none"
                 onKeyDown={(e) => {
-                  if (e.key === "Delete") {
+                  if (e.key === "Delete" || e.key === "Backspace") {
+                    if ((e.target as HTMLElement).tagName === "INPUT") return;
+                    if ((e.target as HTMLElement).tagName === "SELECT") return;
                     e.preventDefault();
                     removeNode(idx);
                   } else if (e.altKey && e.key === "ArrowUp") {
@@ -448,7 +729,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 text-sm font-medium">
                     <Badge variant="secondary">{idx + 1}</Badge>
-                    <span>{tNames(node.slug as Parameters<typeof tNames>[0])}</span>
+                    <span>{name}</span>
                     {def.ai && <AiBadge />}
                   </div>
                   <div className="flex gap-1">
@@ -493,7 +774,8 @@ export function ChainBuilder({ initial }: { initial?: string }) {
                             id={`${node.uid}-${p.name}`}
                             value={node.params[p.name] ?? ""}
                             onChange={(e) => updateParam(idx, p.name, e.target.value)}
-                            className="border-input bg-background h-8 rounded-md border px-2 text-sm"
+                            aria-required={p.required}
+                            className="border-input bg-background focus-visible:ring-ring/50 h-8 rounded-md border px-2 text-sm focus-visible:ring-2 focus-visible:outline-none"
                           >
                             <option value=""></option>
                             {p.options.map((opt) => (
@@ -508,6 +790,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
                             type={p.type === "number" ? "number" : "text"}
                             value={node.params[p.name] ?? ""}
                             onChange={(e) => updateParam(idx, p.name, e.target.value)}
+                            aria-required={p.required}
                             className="h-8"
                           />
                         )}
@@ -522,31 +805,53 @@ export function ChainBuilder({ initial }: { initial?: string }) {
       </Card>
 
       {error && (
-        <p role="alert" className="text-destructive text-sm">
-          {error}
-        </p>
+        <div
+          role="alert"
+          className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <p className="text-destructive text-sm">{error}</p>
+          {(status === "error" || status === "cancelled") && (
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => void run()}>
+                <RotateCw className="mr-1 size-3" aria-hidden />
+                {t("retry")}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setError(null)}>
+                <X className="mr-1 size-3" aria-hidden />
+                {t("clear")}
+              </Button>
+            </div>
+          )}
+        </div>
       )}
 
       {nonEnWarning && (
         <p
           role="status"
-          className="border-warning/50 text-warning-foreground bg-amber-50 border-amber-300 rounded border p-2 text-sm dark:bg-amber-950/40"
+          className="bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-900/50 dark:text-amber-50 dark:border-amber-700 flex items-start gap-2 rounded border p-2 text-sm"
         >
-          {tAnon("non-en-warning", { preset: nonEnWarning })}
+          <span aria-hidden>⚠</span>
+          <span>{tAnon("non-en-warning", { preset: nonEnWarning })}</span>
         </p>
       )}
 
-      <div className="flex items-center justify-between">
-        <Badge variant={status === "error" ? "destructive" : "outline"}>
-          {t(`status-${status}` as "status-idle" | "status-running" | "status-done" | "status-error")}
-        </Badge>
-        <Button onClick={run} disabled={status === "running"}>
-          {status === "running" ? t("running") : t("run")}
-        </Button>
-      </div>
+      {(timeline.length > 0 || rawEvents.length > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium">{t("events")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EventTimeline
+              items={timeline}
+              rawEvents={rawEvents}
+              liveAnnouncement={liveAnnouncement}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {artifacts.length > 0 && (
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {artifacts.map((a) => (
             <a
               key={a.name}
@@ -560,21 +865,30 @@ export function ChainBuilder({ initial }: { initial?: string }) {
         </div>
       )}
 
-      {events.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">{t("events")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre
-              aria-live="polite"
-              className="bg-muted max-h-72 overflow-auto rounded p-3 text-xs whitespace-pre-wrap"
-            >
-              {events.join("\n")}
-            </pre>
-          </CardContent>
-        </Card>
-      )}
+      <div className="bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t px-6 py-3 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Badge variant={statusBadgeVariant} aria-live="polite">
+              {statusLabel}
+            </Badge>
+            {(files.length > 0 || nodes.length > 0) && status !== "running" && (
+              <Button size="sm" variant="ghost" onClick={startOver}>
+                {t("start-over")}
+              </Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {status === "running" ? (
+              <Button size="sm" variant="outline" onClick={cancelRun}>
+                {t("cancel")}
+              </Button>
+            ) : null}
+            <Button onClick={run} disabled={status === "running"}>
+              {status === "running" ? t("running") : t("run")}
+            </Button>
+          </div>
+        </div>
+      </div>
 
       <p className="text-muted-foreground text-xs">{tCat("subtitle")}</p>
       {hasAnonymize && (
@@ -610,7 +924,7 @@ function ToolPicker({
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="relative inline-flex">
       <Label htmlFor="tool-picker" className="sr-only">
         {label}
       </Label>
@@ -624,7 +938,8 @@ function ToolPicker({
             e.target.value = "";
           }
         }}
-        className="border-input bg-background h-8 rounded-md border px-2 text-sm"
+        className="absolute inset-0 cursor-pointer opacity-0"
+        aria-label={label}
       >
         <option value="" disabled>
           {label}
@@ -638,10 +953,10 @@ function ToolPicker({
       <button
         type="button"
         onClick={openPicker}
-        aria-label={label}
-        className="text-muted-foreground hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-md"
+        className="bg-background border-input hover:bg-muted focus-visible:ring-ring/50 inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none"
       >
-        <Plus className="size-4" aria-hidden />
+        <Plus className="size-3.5" aria-hidden />
+        {label}
       </button>
     </div>
   );

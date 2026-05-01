@@ -40,11 +40,14 @@ export function HealthPill() {
 
   return (
     <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center">
-      <div className="flex items-center gap-2">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="flex items-center gap-2"
+      >
         <span className="text-muted-foreground">{t("health-label")}:</span>
-        <Badge variant={state === "ok" ? "secondary" : "outline"} aria-live="polite">
-          {label}
-        </Badge>
+        <Badge variant={state === "ok" ? "secondary" : "outline"}>{label}</Badge>
       </div>
       {detail && (
         <ul className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-xs">
