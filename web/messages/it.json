@@ -1,17 +1,21 @@
 {
   "app": {
-    "title": "pdf-ocr",
-    "tagline": "OCR PDF locale. Nessun byte lascia la tua macchina."
+    "title": "PageMind",
+    "tagline": "Intelligenza per i tuoi documenti. Resta sulla tua macchina."
   },
   "home": {
-    "heading": "pdf-ocr",
-    "subheading": "Carica PDF scansionati e immagini. Ottieni Markdown pulito.",
+    "heading": "PageMind",
+    "subheading": "Intelligenza per i tuoi documenti. Resta sulla tua macchina.",
     "ocr-cta": "Esegui OCR su un documento",
     "tools-cta": "Apri il catalogo strumenti",
     "health-label": "Stato backend",
     "health-checking": "Verifica in corso…",
     "health-ok": "Online",
-    "health-down": "Offline"
+    "health-down": "Offline",
+    "subsystem-ocr": "Motore OCR (Ollama)",
+    "subsystem-anonymizer": "Anonimizzatore (OpenAI Privacy Filter)",
+    "subsystem-ready": "pronto",
+    "subsystem-missing": "non installato"
   },
   "theme": {
     "label": "Tema",

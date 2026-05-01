@@ -1,11 +1,11 @@
-# pdf-ocr
+# PageMind
 
-> Turn scanned PDFs and photos into clean Markdown — entirely on your machine.
+> **Intelligence for your documents. Stays on your machine.**
 
-`pdf-ocr` is a local-first web app that pairs a streaming OCR pipeline
-(GLM-OCR via [Ollama](https://ollama.ai)) with a chainable suite of
-PDF / Markdown / HTML / image tools. Your files never leave your
-computer.
+**PageMind** is a local-first web app that pairs a streaming OCR
+pipeline (GLM-OCR via [Ollama](https://ollama.ai)) with a chainable
+suite of PDF / Markdown / HTML / image tools. Your files never leave
+your computer — local AI by default, remote LLMs are an opt-in.
 
 ---
 

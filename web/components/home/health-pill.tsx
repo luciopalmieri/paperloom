@@ -39,16 +39,52 @@ export function HealthPill() {
         : t("health-down");
 
   return (
-    <div className="flex items-center gap-2 text-sm">
-      <span className="text-muted-foreground">{t("health-label")}:</span>
-      <Badge variant={state === "ok" ? "secondary" : "outline"} aria-live="polite">
-        {label}
-      </Badge>
+    <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center">
+      <div className="flex items-center gap-2">
+        <span className="text-muted-foreground">{t("health-label")}:</span>
+        <Badge variant={state === "ok" ? "secondary" : "outline"} aria-live="polite">
+          {label}
+        </Badge>
+      </div>
       {detail && (
-        <span className="text-muted-foreground text-xs">
-          ollama: {detail.ollama ? "✓" : "✗"} · opf: {detail.opf ? "✓" : "✗"}
-        </span>
+        <ul className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-xs">
+          <SubsystemRow
+            label={t("subsystem-ocr")}
+            ok={detail.ollama}
+            okText={t("subsystem-ready")}
+            missingText={t("subsystem-missing")}
+          />
+          <SubsystemRow
+            label={t("subsystem-anonymizer")}
+            ok={detail.opf}
+            okText={t("subsystem-ready")}
+            missingText={t("subsystem-missing")}
+          />
+        </ul>
       )}
     </div>
+  );
+}
+
+function SubsystemRow({
+  label,
+  ok,
+  okText,
+  missingText,
+}: {
+  label: string;
+  ok: boolean;
+  okText: string;
+  missingText: string;
+}) {
+  return (
+    <li className="flex items-center gap-1">
+      <span aria-hidden className={ok ? "text-emerald-600" : "text-amber-600"}>
+        {ok ? "✓" : "✗"}
+      </span>
+      <span>
+        {label} — {ok ? okText : missingText}
+      </span>
+    </li>
   );
 }

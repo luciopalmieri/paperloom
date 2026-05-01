@@ -1,17 +1,21 @@
 {
   "app": {
-    "title": "pdf-ocr",
-    "tagline": "Local PDF OCR + tools. No bytes leave your machine."
+    "title": "PageMind",
+    "tagline": "Intelligence for your documents. Stays on your machine."
   },
   "home": {
-    "heading": "pdf-ocr",
-    "subheading": "Drop scanned PDFs and images. Get clean Markdown.",
+    "heading": "PageMind",
+    "subheading": "Intelligence for your documents. Stays on your machine.",
     "ocr-cta": "OCR a document",
     "tools-cta": "Open the tool catalogue",
     "health-label": "Backend health",
     "health-checking": "Checking…",
     "health-ok": "Online",
-    "health-down": "Offline"
+    "health-down": "Offline",
+    "subsystem-ocr": "OCR engine (Ollama)",
+    "subsystem-anonymizer": "Anonymizer (OpenAI Privacy Filter)",
+    "subsystem-ready": "ready",
+    "subsystem-missing": "not installed"
   },
   "theme": {
     "label": "Theme",
