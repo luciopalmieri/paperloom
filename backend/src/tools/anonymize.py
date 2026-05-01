@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
@@ -55,8 +56,26 @@ async def run(
                 "suggested_preset": "recall",
             }
 
+        # Surface the expensive phase to the client. First job pays the
+        # OPF model download (~4 GB into ~/.opf/privacy_filter) plus a
+        # cold load; subsequent jobs reuse the cached instance and only
+        # see "detecting".
+        opf_loaded = detect.is_loaded(preset, settings.opf_device)
+        yield "node.progress", {
+            "job_id": job_id,
+            "step": step,
+            "tool": "anonymize",
+            "phase": "detecting" if opf_loaded else "loading_opf",
+            "filename": inp.name,
+        }
+
         try:
-            spans = detect.detect(text, preset=preset, device=settings.opf_device)
+            spans = await asyncio.to_thread(
+                detect.detect,
+                text,
+                preset=preset,
+                device=settings.opf_device,
+            )
         except detect.OPFNotInstalled as exc:
             yield "error", {
                 "job_id": job_id,
@@ -72,6 +91,14 @@ async def run(
                 "category": span.category,
                 "count": 1,
             }
+
+        yield "node.progress", {
+            "job_id": job_id,
+            "step": step,
+            "tool": "anonymize",
+            "phase": "writing_report",
+            "filename": inp.name,
+        }
 
         redacted_text, redactions = redact.apply(text, spans)
 

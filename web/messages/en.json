@@ -65,6 +65,11 @@
       "status-done": "Done",
       "status-error": "Failed",
       "events": "Events",
+      "progress": {
+        "loading_opf": "Loading OPF model (first run downloads ~4 GB into ~/.opf/privacy_filter)…",
+        "detecting": "Running anonymizer detection on {filename}…",
+        "writing_report": "Writing redactions report for {filename}…"
+      },
       "error-no-input": "Upload at least one file before running.",
       "error-no-nodes": "Add at least one tool before running.",
       "error-generic": "Run failed.",

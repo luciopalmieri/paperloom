@@ -65,6 +65,11 @@
       "status-done": "Completato",
       "status-error": "Errore",
       "events": "Eventi",
+      "progress": {
+        "loading_opf": "Caricamento modello OPF (al primo avvio scarica ~4 GB in ~/.opf/privacy_filter)…",
+        "detecting": "Anonimizzazione di {filename} in corso…",
+        "writing_report": "Scrittura report redazioni per {filename}…"
+      },
       "error-no-input": "Carica almeno un file prima di eseguire.",
       "error-no-nodes": "Aggiungi almeno uno strumento prima di eseguire.",
       "error-generic": "Esecuzione fallita.",

@@ -268,6 +268,24 @@ export function ChainBuilder({ initial }: { initial?: string }) {
         handle(evt, data);
       });
     }
+    es.addEventListener("node.progress", (ev) => {
+      const data = JSON.parse((ev as MessageEvent).data) as {
+        tool?: string;
+        phase?: string;
+        filename?: string;
+      };
+      const phase = data.phase ?? "";
+      const known = ["loading_opf", "detecting", "writing_report"] as const;
+      if ((known as readonly string[]).includes(phase)) {
+        const human = t(
+          (`progress.${phase}` as unknown) as Parameters<typeof t>[0],
+          { filename: data.filename ?? "" },
+        );
+        setEvents((prev) => [...prev, human].slice(-100));
+      } else {
+        handle("node.progress", data);
+      }
+    });
     es.addEventListener("anonymize.warn", (ev) => {
       const data = JSON.parse((ev as MessageEvent).data) as {
         code: string;

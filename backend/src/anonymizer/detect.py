@@ -35,8 +35,16 @@ def _opf_available() -> bool:
     return importlib.util.find_spec("opf") is not None
 
 
+_OPF_CACHE: dict[tuple[str, str], object] = {}
+
+
 def _build_opf(preset: str, device: str) -> object:
-    """Build a configured OPF instance.
+    """Build (and cache) a configured OPF instance.
+
+    Loading OPF is expensive: first call downloads ~4 GB into
+    ~/.opf/privacy_filter, then loads the BERT-style model into RAM.
+    On CPU that's tens of seconds at best. Caching by (preset, device)
+    keeps subsequent jobs fast.
 
     Phase-0 §5.4: exact calibration mappings for `recall` / `precision` are
     not pinned yet (OPF README does not enumerate parameter values). For now
@@ -49,16 +57,33 @@ def _build_opf(preset: str, device: str) -> object:
             "OPF not installed. Clone https://github.com/openai/privacy-filter "
             "and run `uv pip install -e <path>` in the backend venv.",
         )
+
+    key = (preset, device)
+    cached = _OPF_CACHE.get(key)
+    if cached is not None:
+        return cached
+
     from opf import OPF  # noqa: PLC0415
 
     discard = preset == "precision"
-    return OPF(
+    instance = OPF(
         device="cpu" if device == "cpu" else "cuda",
         output_mode="typed",
         decode_mode="viterbi",
         discard_overlapping_predicted_spans=discard,
         output_text_only=False,
     )
+    _OPF_CACHE[key] = instance
+    return instance
+
+
+def is_loaded(preset: str, device: str) -> bool:
+    """Whether the (preset, device) OPF instance is already cached.
+
+    Used by the anonymize tool to label the progress event accurately —
+    "loading model" on first call, "running detection" thereafter.
+    """
+    return (preset, device) in _OPF_CACHE
 
 
 def detect(text: str, *, preset: str = "balanced", device: str = "cpu") -> list[Span]:
