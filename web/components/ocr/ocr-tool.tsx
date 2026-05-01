@@ -569,7 +569,7 @@ export function OcrTool() {
                 ))}
               {state.uploaded && (
                 <Link
-                  href={`/tools/chain?initial=anonymize&from=${state.uploaded.file_id}`}
+                  href={`/tools/chain?initial=ocr-to-markdown&from=${state.uploaded.file_id}`}
                   className="border-input hover:bg-muted focus-visible:ring-ring/50 inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none"
                 >
                   {t("continue")}

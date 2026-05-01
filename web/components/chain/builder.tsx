@@ -158,7 +158,13 @@ function paramsForBackend(node: NodeState): Record<string, unknown> {
   return out;
 }
 
-export function ChainBuilder({ initial }: { initial?: string }) {
+export function ChainBuilder({
+  initial,
+  fromFileId,
+}: {
+  initial?: string;
+  fromFileId?: string;
+}) {
   const t = useTranslations("tools.chain");
   const tNames = useTranslations("tools.names");
   const tParams = useTranslations("tools.params");
@@ -186,9 +192,29 @@ export function ChainBuilder({ initial }: { initial?: string }) {
   const esRef = useRef<EventSource | null>(null);
   const nodeRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Restore draft on mount (skip when ?initial provided — explicit user intent).
+  // Restore draft on mount (skip when ?initial or ?from provided — explicit
+  // user intent). When ?from is provided, prefill that file via the metadata
+  // endpoint so the user does not have to re-upload.
   useEffect(() => {
-    if (initial) {
+    if (initial || fromFileId) {
+      if (fromFileId) {
+        let cancelled = false;
+        (async () => {
+          try {
+            const r = await fetch(backendUrl(`/api/files/${fromFileId}`));
+            if (!r.ok) return;
+            const data = (await r.json()) as FileState;
+            if (cancelled) return;
+            setFiles([data]);
+          } catch {
+            // ignore — user can still upload manually
+          }
+        })();
+        setHydrated(true);
+        return () => {
+          cancelled = true;
+        };
+      }
       setHydrated(true);
       return;
     }
@@ -215,7 +241,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
       // ignore
     }
     setHydrated(true);
-  }, [initial, t]);
+  }, [initial, fromFileId, t]);
 
   // Persist draft.
   useEffect(() => {
