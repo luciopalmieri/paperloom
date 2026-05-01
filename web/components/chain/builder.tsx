@@ -37,6 +37,18 @@ const POSITIONS = [
 
 const TOOLS: ToolDef[] = [
   { slug: "ocr-to-markdown", ai: true, params: [] },
+  {
+    slug: "anonymize",
+    ai: true,
+    params: [
+      {
+        name: "preset",
+        type: "enum",
+        options: ["balanced", "recall", "precision"],
+        default: "balanced",
+      },
+    ],
+  },
   { slug: "pdf-to-text", params: [] },
   { slug: "pdf-to-images", params: [{ name: "dpi", type: "number", default: 150 }] },
   { slug: "merge-pdfs", params: [] },
@@ -142,6 +154,9 @@ export function ChainBuilder({ initial }: { initial?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<string[]>([]);
   const [artifacts, setArtifacts] = useState<Artifact[]>([]);
+  const [nonEnWarning, setNonEnWarning] = useState<string | null>(null);
+  const tAnon = useTranslations("tools.anonymize");
+  const hasAnonymize = nodes.some((n) => n.slug === "anonymize");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const esRef = useRef<EventSource | null>(null);
 
@@ -203,6 +218,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
     setStatus("running");
     setEvents([]);
     setArtifacts([]);
+    setNonEnWarning(null);
 
     const body = {
       tools: nodes.map((n) => ({ slug: n.slug, params: paramsForBackend(n) })),
@@ -240,12 +256,23 @@ export function ChainBuilder({ initial }: { initial?: string }) {
       "node.end",
       "progress",
       "ocr.page",
+      "anonymize.span",
     ] as const) {
       es.addEventListener(evt, (ev) => {
         const data = JSON.parse((ev as MessageEvent).data);
         handle(evt, data);
       });
     }
+    es.addEventListener("anonymize.warn", (ev) => {
+      const data = JSON.parse((ev as MessageEvent).data) as {
+        code: string;
+        suggested_preset?: string;
+      };
+      handle("anonymize.warn", data);
+      if (data.code === "non_en_input") {
+        setNonEnWarning(data.suggested_preset ?? "recall");
+      }
+    });
     es.addEventListener("error", () => {
       if (es.readyState === EventSource.CLOSED) {
         setError(t("error-generic"));
@@ -457,6 +484,15 @@ export function ChainBuilder({ initial }: { initial?: string }) {
         </p>
       )}
 
+      {nonEnWarning && (
+        <p
+          role="status"
+          className="border-warning/50 text-warning-foreground bg-amber-50 border-amber-300 rounded border p-2 text-sm dark:bg-amber-950/40"
+        >
+          {tAnon("non-en-warning", { preset: nonEnWarning })}
+        </p>
+      )}
+
       <div className="flex items-center justify-between">
         <Badge variant={status === "error" ? "destructive" : "outline"}>
           {t(`status-${status}` as "status-idle" | "status-running" | "status-done" | "status-error")}
@@ -498,6 +534,9 @@ export function ChainBuilder({ initial }: { initial?: string }) {
       )}
 
       <p className="text-muted-foreground text-xs">{tCat("subtitle")}</p>
+      {hasAnonymize && (
+        <p className="text-muted-foreground text-xs">{tAnon("footer-license")}</p>
+      )}
     </main>
   );
 }

@@ -32,8 +32,14 @@ Full design: [`doc/prompt/architecture.md`](doc/prompt/architecture.md).
 - Node 20+
 - Python 3.11+
 - [Ollama](https://ollama.ai) with `glm-ocr:latest` pulled
+- [OpenAI Privacy Filter](https://github.com/openai/privacy-filter)
+  cloned locally and installed into the backend venv (anonymizer tool):
+  ```bash
+  git clone https://github.com/openai/privacy-filter ~/src/opf
+  cd backend && uv pip install -e ~/src/opf
+  ```
 - ~4 GB free disk for the OPF model checkpoint (downloaded on first
-  run)
+  run to `~/.opf/privacy_filter`)
 
 ## Setup — native (default)
 

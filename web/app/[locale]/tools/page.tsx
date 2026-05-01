@@ -24,7 +24,12 @@ const SECTIONS: { key: "ai" | "conversion" | "manipulation"; tools: Entry[] }[] 
         available: true,
         href: "/tools/ocr-to-markdown",
       },
-      { slug: "anonymize", ai: true, available: false },
+      {
+        slug: "anonymize",
+        ai: true,
+        available: true,
+        href: chainHref("anonymize"),
+      },
     ],
   },
   {

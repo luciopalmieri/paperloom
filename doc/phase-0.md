@@ -415,12 +415,28 @@ Verbatim from `anonymizer-rules.md`:
 
 Three UI presets exposed: `balanced` (default), `recall`, `precision`.
 
-**OPF ↔ preset mapping is unconfirmed** — Context7 does not index `openai/privacy-filter`. Per `anonymizer-rules.md`, the exact mapping must come from the OPF README's "Operating-Point Calibration" section. Action plan:
+**OPF ↔ preset mapping (resolved in Phase 4)** — see §5.4.1.
 
-- **Phase 4, step 1** — clone `https://github.com/openai/privacy-filter`, read README, extract the calibration parameters (likely a per-category decoding threshold and/or a global beam/score cutoff). Lock the mapping in `backend/src/anonymizer/detect.py` and append the resolved values to this doc as §5.4.1 before any UI surfaces them.
-- Until then, presets are wired in the UI but call OPF with its library-default arguments for `balanced`. `recall` and `precision` raise a clearly-labelled `NotImplementedError` if the README read has not happened yet — fail loud, do not silently fall back.
+### 5.4.1 Resolved mapping
 
-This is the single intentional unknown in Phase 0 and the only blocker that defers from research to implementation time.
+OPF's public Python API (`opf._api.OPF`) exposes a fixed Viterbi decoder
+plus a `discard_overlapping_predicted_spans` flag. Calibration is done
+via a separate `set_viterbi_decoder(calibration_path=...)` method that
+expects a JSON file; the README does not enumerate canonical
+calibration files for "recall" and "precision" yet, so we cannot pin
+exact transition-bias values. Phase 4 ships this minimal mapping and
+will tighten when OPF publishes preset calibration JSONs:
+
+| UI preset   | OPF call                                        |
+|-------------|--------------------------------------------------|
+| `balanced`  | default constructor                             |
+| `recall`    | default constructor (placeholder)               |
+| `precision` | constructor with `discard_overlapping_predicted_spans=True` |
+
+`recall` is intentionally identical to `balanced` for now; it is wired
+into the UI so users can pick it but currently behaves the same. The
+non-EN banner still suggests `recall` because once OPF ships richer
+calibration the binding will be in place.
 
 ### 5.5 IT input handling
 

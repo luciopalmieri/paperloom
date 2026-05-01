@@ -32,6 +32,7 @@ def list_tools() -> list[str]:
 from src.tools import (  # noqa: E402,F401
     add_page_numbers,
     add_watermark,
+    anonymize,
     compress_pdf,
     delete_pages,
     extract_pages,

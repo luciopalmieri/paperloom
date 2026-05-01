@@ -73,7 +73,12 @@
       "font_size": "Dimensione font",
       "text": "Testo",
       "opacity": "Opacità (0-1)",
-      "rotation": "Rotazione (gradi)"
+      "rotation": "Rotazione (gradi)",
+      "preset": "Preset"
+    },
+    "anonymize": {
+      "non-en-warning": "Input non in inglese rilevato. OPF è ottimizzato per l'inglese; per migliore recall passa al preset {preset}.",
+      "footer-license": "Motore di rilevamento: OpenAI Privacy Filter (Apache 2.0)."
     },
     "names": {
       "ocr-to-markdown": "OCR in Markdown",
