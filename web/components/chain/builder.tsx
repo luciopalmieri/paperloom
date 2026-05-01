@@ -296,7 +296,25 @@ export function ChainBuilder({ initial }: { initial?: string }) {
         setNonEnWarning(data.suggested_preset ?? "recall");
       }
     });
-    es.addEventListener("error", () => {
+    es.addEventListener("error", (ev) => {
+      const me = ev as MessageEvent;
+      if (typeof me.data === "string" && me.data.length > 0) {
+        // Named SSE error from the backend (chain step rejected). Show
+        // the server message and stop reconnecting — otherwise the
+        // GET /events handler keeps re-running the chain on every retry.
+        let message = t("error-generic");
+        try {
+          const data = JSON.parse(me.data) as { code?: string; message?: string };
+          message = data.message ?? data.code ?? message;
+        } catch {
+          // ignore parse error, use generic
+        }
+        setError(message);
+        setStatus("error");
+        es.close();
+        esRef.current = null;
+        return;
+      }
       if (es.readyState === EventSource.CLOSED) {
         setError(t("error-generic"));
         setStatus("error");
@@ -577,12 +595,27 @@ function ToolPicker({
   tNames: (key: string) => string;
   onPick: (slug: string) => void;
 }) {
+  const selectRef = useRef<HTMLSelectElement>(null);
+
+  const openPicker = () => {
+    const el = selectRef.current;
+    if (!el) return;
+    type SelectWithPicker = HTMLSelectElement & { showPicker?: () => void };
+    const withPicker = el as SelectWithPicker;
+    if (typeof withPicker.showPicker === "function") {
+      withPicker.showPicker();
+    } else {
+      el.focus();
+    }
+  };
+
   return (
     <div className="flex items-center gap-2">
       <Label htmlFor="tool-picker" className="sr-only">
         {label}
       </Label>
       <select
+        ref={selectRef}
         id="tool-picker"
         defaultValue=""
         onChange={(e) => {
@@ -602,7 +635,14 @@ function ToolPicker({
           </option>
         ))}
       </select>
-      <Plus className="text-muted-foreground size-4" aria-hidden />
+      <button
+        type="button"
+        onClick={openPicker}
+        aria-label={label}
+        className="text-muted-foreground hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-md"
+      >
+        <Plus className="size-4" aria-hidden />
+      </button>
     </div>
   );
 }
