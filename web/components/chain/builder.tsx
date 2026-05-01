@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, Download, Plus, Trash2, Upload } from "lucide-react
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { OpfInstallBanner } from "@/components/anonymize/install-banner";
 import { AiBadge } from "@/components/ui/ai-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -307,6 +308,8 @@ export function ChainBuilder({ initial }: { initial?: string }) {
         <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
       </header>
+
+      {hasAnonymize && <OpfInstallBanner />}
 
       <Card>
         <CardHeader>

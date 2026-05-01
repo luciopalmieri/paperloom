@@ -83,7 +83,14 @@
     },
     "anonymize": {
       "non-en-warning": "Non-English input detected. OPF is English-primary; consider switching the preset to {preset} for better recall.",
-      "footer-license": "Detection engine: OpenAI Privacy Filter (Apache 2.0)."
+      "footer-license": "Detection engine: OpenAI Privacy Filter (Apache 2.0).",
+      "install-title": "Anonymizer needs OpenAI Privacy Filter",
+      "install-body": "OPF is the detection engine. It is not installed by default because it pulls in torch + transformers (~250 MB) and downloads a model checkpoint (~4 GB) on first run into ~/.opf/privacy_filter. Everything stays on your machine — no telemetry, no cloud round-trips.",
+      "install-cmd-label": "Run this in a terminal at the repo root:",
+      "install-restart": "Restart `npm run dev` after the install completes.",
+      "install-copy": "Copy command",
+      "install-copied": "Copied",
+      "install-recheck": "Re-check"
     },
     "names": {
       "ocr-to-markdown": "OCR to Markdown",

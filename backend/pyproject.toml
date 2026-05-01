@@ -17,8 +17,13 @@ dependencies = [
     "markdown-it-py>=3.0.0",
     "reportlab>=4.2.0",
     "weasyprint>=68.1",
-    "opf",
 ]
+
+[project.optional-dependencies]
+# Pulled in only when the user opts into the OPF anonymizer (see UI banner
+# on /tools/chain when an anonymize node is added without OPF installed).
+# Activate with: uv sync --extra anonymizer  (or `npm run install:opf`).
+anonymizer = ["opf"]
 
 [tool.uv.sources]
 opf = { git = "https://github.com/openai/privacy-filter.git", rev = "main" }

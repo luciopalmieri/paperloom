@@ -9,7 +9,8 @@
     "build:web": "npm -w web run build",
     "lint:web": "npm -w web run lint",
     "test:api": "cd backend && uv run pytest",
-    "install:all": "npm install && cd backend && uv sync"
+    "install:all": "npm install && cd backend && uv sync",
+    "install:opf": "cd backend && uv sync --extra anonymizer"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

@@ -83,7 +83,14 @@
     },
     "anonymize": {
       "non-en-warning": "Input non in inglese rilevato. OPF è ottimizzato per l'inglese; per migliore recall passa al preset {preset}.",
-      "footer-license": "Motore di rilevamento: OpenAI Privacy Filter (Apache 2.0)."
+      "footer-license": "Motore di rilevamento: OpenAI Privacy Filter (Apache 2.0).",
+      "install-title": "L'anonimizzazione richiede OpenAI Privacy Filter",
+      "install-body": "OPF è il motore di detection. Non è installato di default perché richiede torch + transformers (~250 MB) e scarica un checkpoint del modello (~4 GB) al primo run in ~/.opf/privacy_filter. Tutto resta sulla tua macchina — nessun telemetry, nessun round-trip cloud.",
+      "install-cmd-label": "Esegui in un terminale dalla root del repo:",
+      "install-restart": "Riavvia `npm run dev` al termine dell'installazione.",
+      "install-copy": "Copia comando",
+      "install-copied": "Copiato",
+      "install-recheck": "Ricontrolla"
     },
     "names": {
       "ocr-to-markdown": "OCR in Markdown",

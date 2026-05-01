@@ -75,16 +75,26 @@ pre-added: `/tools/chain?initial=<slug>`.
 - ~4 GB free disk for the OPF model checkpoint (downloaded on first
   run to `~/.opf/privacy_filter`)
 
-### Anonymizer
+### Anonymizer (opt-in)
 
 The `anonymize` tool depends on
 [OpenAI Privacy Filter](https://github.com/openai/privacy-filter).
-It is wired straight into `backend/pyproject.toml` as a git
-dependency, so `npm run install:all` (which calls `uv sync` under
-the hood) clones and installs it for you. First time you actually
-run anonymize, OPF downloads its model checkpoint
-(~4 GB) into `~/.opf/privacy_filter`; subsequent runs are fully
-offline.
+It is **not** installed by default — it brings in torch +
+transformers (~250 MB of Python deps) and downloads a model
+checkpoint (~4 GB) into `~/.opf/privacy_filter` on first use.
+
+When you add an `anonymize` node in `/tools/chain` without OPF
+installed, the UI shows an in-app banner explaining the trade-off
+and giving you the install command to copy. Or run it directly:
+
+```bash
+npm run install:opf
+```
+
+That maps to `cd backend && uv sync --extra anonymizer`. Restart
+`npm run dev` afterwards. Everything stays on your machine — no
+telemetry, no cloud round-trips. Once installed, subsequent runs
+are fully offline.
 
 ### HTML / Markdown → PDF (optional)
 
