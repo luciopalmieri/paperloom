@@ -75,3 +75,33 @@ def test_artifact_traversal_in_name_blocked(tmp_path, monkeypatch):
     client = TestClient(app)
     r = client.get("/api/jobs/whatever/artifacts/..secret")
     assert r.status_code == 400
+
+
+def test_ocr_pages_param_processes_subset(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "job_storage_root", str(tmp_path))
+    monkeypatch.setattr(ollama, "stream_generate", _fake_ollama)
+
+    client = TestClient(app)
+
+    up = client.post(
+        "/api/files",
+        files={"file": ("doc.pdf", _make_pdf(4), "application/pdf")},
+    ).json()
+
+    job = client.post(
+        "/api/jobs",
+        json={
+            "tools": [{"slug": "ocr-to-markdown", "params": {"pages": [1, 3]}}],
+            "inputs": [up["file_id"]],
+        },
+    ).json()
+    job_id = job["job_id"]
+
+    with client.stream("GET", f"/api/jobs/{job_id}/events") as r:
+        assert r.status_code == 200
+        body = b"".join(r.iter_bytes()).decode()
+
+    assert '"page": 1' in body
+    assert '"page": 3' in body
+    assert '"page": 2' not in body
+    assert '"page": 4' not in body

@@ -185,8 +185,31 @@
       "continue": "Continue in chain",
       "page-processed": "Page {n} of {total} processed",
       "view-tabs-label": "Switch view",
+      "tab-pages": "Pages",
       "tab-preview": "Preview",
-      "tab-markdown": "Markdown"
+      "tab-markdown": "Markdown",
+      "stop": "Stop",
+      "stopped": "OCR stopped — backend may still be running.",
+      "restart": "Restart",
+      "replace": "Replace file",
+      "status-cancelled": "Stopped",
+      "status-done": "Done",
+      "page-status-pending": "Pending",
+      "page-status-processing": "Processing",
+      "page-status-done": "Done",
+      "page-status-skipped": "Skipped",
+      "page-status-cancelled": "Stopped",
+      "select": "Select",
+      "select-all": "Select all",
+      "clear-selection": "Clear",
+      "selected-count": "{n} of {total} selected",
+      "run-selected": "Run on {n} pages",
+      "range-label": "Pages",
+      "range-placeholder": "1,3-5,7",
+      "range-help": "Comma-separated pages or ranges (e.g. 1,3-5,7).",
+      "pre-run-title": "{count} pages — pick what to convert",
+      "pre-run-body": "Big documents take a while. Convert everything, or limit to specific pages.",
+      "run-all": "Convert all {n} pages"
     }
   }
 }

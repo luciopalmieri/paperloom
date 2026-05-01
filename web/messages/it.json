@@ -185,8 +185,31 @@
       "continue": "Continua nella chain",
       "page-processed": "Pagina {n} di {total} processata",
       "view-tabs-label": "Cambia vista",
+      "tab-pages": "Pagine",
       "tab-preview": "Anteprima",
-      "tab-markdown": "Markdown"
+      "tab-markdown": "Markdown",
+      "stop": "Ferma",
+      "stopped": "OCR fermato — il backend potrebbe continuare.",
+      "restart": "Riavvia",
+      "replace": "Sostituisci file",
+      "status-cancelled": "Fermato",
+      "status-done": "Completato",
+      "page-status-pending": "In attesa",
+      "page-status-processing": "In corso",
+      "page-status-done": "Fatto",
+      "page-status-skipped": "Saltata",
+      "page-status-cancelled": "Fermato",
+      "select": "Seleziona",
+      "select-all": "Seleziona tutto",
+      "clear-selection": "Pulisci",
+      "selected-count": "{n} di {total} selezionate",
+      "run-selected": "Esegui su {n} pagine",
+      "range-label": "Pagine",
+      "range-placeholder": "1,3-5,7",
+      "range-help": "Pagine o intervalli separati da virgola (es. 1,3-5,7).",
+      "pre-run-title": "{count} pagine — scegli cosa convertire",
+      "pre-run-body": "I documenti lunghi richiedono tempo. Converti tutto, oppure limita a pagine specifiche.",
+      "run-all": "Converti tutte le {n} pagine"
     }
   }
 }

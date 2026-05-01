@@ -9,7 +9,10 @@ from src.ocr.prompts import OCR_PROMPT
 
 
 async def run_real(
-    job_id: str, pdf_path: Path, out_dir: Path
+    job_id: str,
+    pdf_path: Path,
+    out_dir: Path,
+    selected_pages: list[int] | None = None,
 ) -> AsyncIterator[tuple[str, dict[str, Any]]]:
     """OCR a PDF or image via Ollama into `out_dir/out.md` plus `out_dir/images/`.
 
@@ -17,21 +20,32 @@ async def run_real(
     placeholders [[FIGURE:fig-N]] pass through verbatim — cropping is
     deferred per phase-0 §8.2. Final `node.end` event lists the
     written output files (consumed by the chain executor).
+
+    `selected_pages` (1-indexed) restricts processing to those pages;
+    out-of-range entries are silently dropped. None means all pages.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     images_dir = out_dir / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
 
     is_img = images.is_image(pdf_path.name)
-    pages = 1 if is_img else render.page_count(pdf_path)
+    total_pages = 1 if is_img else render.page_count(pdf_path)
+    if selected_pages:
+        page_iter = sorted({p for p in selected_pages if 1 <= p <= total_pages})
+        if not page_iter:
+            page_iter = list(range(1, total_pages + 1))
+    else:
+        page_iter = list(range(1, total_pages + 1))
     page_buffers: dict[int, str] = {}
 
-    for page in range(1, pages + 1):
+    processed = 0
+    total_to_process = len(page_iter)
+    for page in page_iter:
         yield "progress", {
             "job_id": job_id,
             "tool": "ocr-to-markdown",
             "page": page,
-            "percent": int(((page - 1) / pages) * 100),
+            "percent": int((processed / total_to_process) * 100) if total_to_process else 0,
         }
         png = images.load_as_png(pdf_path) if is_img else render.render_page_png(pdf_path, page - 1)
         buf: list[str] = []
@@ -53,6 +67,7 @@ async def run_real(
             }
             return
         page_buffers[page] = "".join(buf)
+        processed += 1
         yield "ocr.page", {
             "job_id": job_id,
             "page": page,
