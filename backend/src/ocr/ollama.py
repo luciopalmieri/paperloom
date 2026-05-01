@@ -25,6 +25,10 @@ async def stream_generate(image_png: bytes, prompt: str) -> AsyncIterator[str]:
         "prompt": prompt,
         "images": [base64.b64encode(image_png).decode("ascii")],
         "stream": True,
+        "options": {
+            "num_ctx": 8192,
+            "num_predict": 4096,
+        },
     }
     url = f"{settings.ollama_url}/api/generate"
     timeout = httpx.Timeout(connect=10.0, read=600.0, write=60.0, pool=10.0)

@@ -4,14 +4,14 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any
 
-from src.ocr import ollama, render, stub
+from src.ocr import images, ollama, render, stub
 from src.ocr.prompts import OCR_PROMPT
 
 
 async def run_real(
     job_id: str, pdf_path: Path, out_dir: Path
 ) -> AsyncIterator[tuple[str, dict[str, Any]]]:
-    """OCR a PDF via Ollama into `out_dir/out.md` plus `out_dir/images/`.
+    """OCR a PDF or image via Ollama into `out_dir/out.md` plus `out_dir/images/`.
 
     Yields per-page Markdown chunks via SSE-shaped events. Figure
     placeholders [[FIGURE:fig-N]] pass through verbatim — cropping is
@@ -22,7 +22,8 @@ async def run_real(
     images_dir = out_dir / "images"
     images_dir.mkdir(parents=True, exist_ok=True)
 
-    pages = render.page_count(pdf_path)
+    is_img = images.is_image(pdf_path.name)
+    pages = 1 if is_img else render.page_count(pdf_path)
     page_buffers: dict[int, str] = {}
 
     for page in range(1, pages + 1):
@@ -32,7 +33,7 @@ async def run_real(
             "page": page,
             "percent": int(((page - 1) / pages) * 100),
         }
-        png = render.render_page_png(pdf_path, page - 1)
+        png = images.load_as_png(pdf_path) if is_img else render.render_page_png(pdf_path, page - 1)
         buf: list[str] = []
         try:
             async for chunk in ollama.stream_generate(png, OCR_PROMPT):

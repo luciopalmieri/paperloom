@@ -103,7 +103,7 @@ const TOOLS: ToolDef[] = [
 
 const TOOL_BY_SLUG = new Map(TOOLS.map((t) => [t.slug, t]));
 
-type FileState = { fileId: string; filename: string; size: number; pages: number | null };
+type FileState = { file_id: string; filename: string; size: number; pages: number | null };
 type NodeState = { uid: string; slug: string; params: Record<string, string> };
 type Artifact = { name: string; size: number; url: string };
 type Status = "idle" | "running" | "done" | "error";
@@ -144,7 +144,7 @@ function paramsForBackend(node: NodeState): Record<string, unknown> {
 export function ChainBuilder({ initial }: { initial?: string }) {
   const t = useTranslations("tools.chain");
   const tNames = useTranslations("tools.names");
-  const tParams = useTranslations("params");
+  const tParams = useTranslations("tools.params");
   const tCat = useTranslations("tools.catalogue");
 
   const initialNode = initial && TOOL_BY_SLUG.has(initial)
@@ -225,7 +225,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
 
     const body = {
       tools: nodes.map((n) => ({ slug: n.slug, params: paramsForBackend(n) })),
-      inputs: files.map((f) => f.fileId),
+      inputs: files.map((f) => f.file_id),
     };
 
     let jobId: string;
@@ -343,7 +343,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
           {files.length > 0 && (
             <ul className="flex flex-col gap-1 text-sm">
               {files.map((f) => (
-                <li key={f.fileId} className="flex items-center justify-between">
+                <li key={f.file_id} className="flex items-center justify-between">
                   <span className="truncate">
                     <code className="text-xs">{f.filename}</code>
                     {f.pages !== null && (
@@ -357,7 +357,7 @@ export function ChainBuilder({ initial }: { initial?: string }) {
                     variant="ghost"
                     aria-label={t("remove-file")}
                     onClick={() =>
-                      setFiles((prev) => prev.filter((x) => x.fileId !== f.fileId))
+                      setFiles((prev) => prev.filter((x) => x.file_id !== f.file_id))
                     }
                   >
                     <Trash2 className="size-3" aria-hidden />

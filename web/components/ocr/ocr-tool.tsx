@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Upload } from "lucide-react";
+import { Download, RotateCw, Upload } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
@@ -41,10 +41,19 @@ const initial: State = {
   artifacts: [],
 };
 
+const IMAGE_EXTS = [".png", ".jpg", ".jpeg", ".webp", ".tif", ".tiff", ".bmp", ".gif"];
+const ACCEPTED_EXTS = [".pdf", ...IMAGE_EXTS];
+
+const isImageName = (name: string) => {
+  const lower = name.toLowerCase();
+  return IMAGE_EXTS.some((ext) => lower.endsWith(ext));
+};
+
 export function OcrTool() {
   const t = useTranslations("tools.ocr-to-markdown");
   const f = useFormatter();
   const [state, setState] = useState<State>(initial);
+  const [previewBust, setPreviewBust] = useState(0);
   const esRef = useRef<EventSource | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -54,53 +63,10 @@ export function OcrTool() {
     esRef.current?.close();
     esRef.current = null;
     setState(initial);
+    setPreviewBust(0);
   };
 
-  const onUpload = async (file: File) => {
-    reset();
-    if (!file.name.toLowerCase().endsWith(".pdf")) {
-      setState((s) => ({ ...s, error: t("error-not-pdf") }));
-      return;
-    }
-    if (file.size > MAX_MB * 1024 * 1024) {
-      setState((s) => ({ ...s, error: t("error-too-large") }));
-      return;
-    }
-
-    setState((s) => ({ ...s, uploading: true, error: null }));
-    const fd = new FormData();
-    fd.append("file", file);
-
-    let uploaded: UploadResp;
-    try {
-      const r = await fetch(backendUrl("/api/files"), { method: "POST", body: fd });
-      if (r.status === 413) {
-        const j = await r.json().catch(() => ({}));
-        const code = j?.detail?.code;
-        setState((s) => ({
-          ...s,
-          uploading: false,
-          error: code === "too_many_pages" ? t("error-too-many-pages") : t("error-too-large"),
-        }));
-        return;
-      }
-      if (!r.ok) {
-        setState((s) => ({ ...s, uploading: false, error: t("error-generic") }));
-        return;
-      }
-      uploaded = (await r.json()) as UploadResp;
-    } catch {
-      setState((s) => ({ ...s, uploading: false, error: t("error-generic") }));
-      return;
-    }
-
-    setState((s) => ({
-      ...s,
-      uploaded,
-      uploading: false,
-      totalPages: uploaded.pages ?? 0,
-    }));
-
+  const startOcrJob = async (uploaded: UploadResp) => {
     let jobId: string;
     try {
       const r = await fetch(backendUrl("/api/jobs"), {
@@ -164,6 +130,86 @@ export function OcrTool() {
     });
   };
 
+  const onRotate = async () => {
+    if (!state.uploaded) return;
+    esRef.current?.close();
+    esRef.current = null;
+    try {
+      const r = await fetch(
+        backendUrl(`/api/files/${state.uploaded.file_id}/rotate?degrees=90`),
+        { method: "POST" },
+      );
+      if (!r.ok) {
+        setState((s) => ({ ...s, error: t("error-generic") }));
+        return;
+      }
+    } catch {
+      setState((s) => ({ ...s, error: t("error-generic") }));
+      return;
+    }
+    setPreviewBust((n) => n + 1);
+    const uploaded = state.uploaded;
+    setState((s) => ({
+      ...s,
+      jobId: null,
+      pages: {},
+      pageOrder: [],
+      doneCount: 0,
+      artifacts: [],
+      error: null,
+    }));
+    await startOcrJob(uploaded);
+  };
+
+  const onUpload = async (file: File) => {
+    reset();
+    const lower = file.name.toLowerCase();
+    if (!ACCEPTED_EXTS.some((ext) => lower.endsWith(ext))) {
+      setState((s) => ({ ...s, error: t("error-not-supported") }));
+      return;
+    }
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setState((s) => ({ ...s, error: t("error-too-large") }));
+      return;
+    }
+
+    setState((s) => ({ ...s, uploading: true, error: null }));
+    const fd = new FormData();
+    fd.append("file", file);
+
+    let uploaded: UploadResp;
+    try {
+      const r = await fetch(backendUrl("/api/files"), { method: "POST", body: fd });
+      if (r.status === 413) {
+        const j = await r.json().catch(() => ({}));
+        const code = j?.detail?.code;
+        setState((s) => ({
+          ...s,
+          uploading: false,
+          error: code === "too_many_pages" ? t("error-too-many-pages") : t("error-too-large"),
+        }));
+        return;
+      }
+      if (!r.ok) {
+        setState((s) => ({ ...s, uploading: false, error: t("error-generic") }));
+        return;
+      }
+      uploaded = (await r.json()) as UploadResp;
+    } catch {
+      setState((s) => ({ ...s, uploading: false, error: t("error-generic") }));
+      return;
+    }
+
+    setState((s) => ({
+      ...s,
+      uploaded,
+      uploading: false,
+      totalPages: uploaded.pages ?? 0,
+    }));
+
+    await startOcrJob(uploaded);
+  };
+
   const progressPercent = state.totalPages
     ? Math.round((state.doneCount / state.totalPages) * 100)
     : 0;
@@ -202,7 +248,7 @@ export function OcrTool() {
           <input
             ref={inputRef}
             type="file"
-            accept="application/pdf,.pdf"
+            accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,image/tiff,image/bmp,image/gif"
             className="hidden"
             onChange={(e) => {
               const f = e.target.files?.[0];
@@ -226,8 +272,19 @@ export function OcrTool() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Card className="overflow-hidden">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between gap-2">
                 <CardTitle className="text-sm font-medium">{state.uploaded.filename}</CardTitle>
+                {isImageName(state.uploaded.filename) && (
+                  <button
+                    type="button"
+                    onClick={onRotate}
+                    aria-label={t("rotate")}
+                    className="border-input hover:bg-muted inline-flex h-7 items-center gap-1 rounded-md border px-2 text-xs"
+                  >
+                    <RotateCw className="size-3" aria-hidden />
+                    {t("rotate")}
+                  </button>
+                )}
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[70vh]">
@@ -237,6 +294,7 @@ export function OcrTool() {
                         key={p}
                         fileId={state.uploaded!.file_id}
                         page={p}
+                        bust={previewBust}
                         alt={t("page-of", { page: p, filename: state.uploaded!.filename })}
                       />
                     ))}
@@ -303,15 +361,29 @@ export function OcrTool() {
   );
 }
 
-function PagePreview({ fileId, page, alt }: { fileId: string; page: number; alt: string }) {
+function PagePreview({
+  fileId,
+  page,
+  alt,
+  bust = 0,
+}: {
+  fileId: string;
+  page: number;
+  alt: string;
+  bust?: number;
+}) {
   const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    setLoaded(false);
+  }, [bust]);
+  const url = backendUrl(`/api/files/${fileId}/preview?page=${page}`) + (bust ? `&v=${bust}` : "");
   return (
     <div className="border-input relative overflow-hidden rounded border">
       {!loaded && <Skeleton className="aspect-[8.5/11] w-full" />}
       {/* Server-rendered PNG; the backend handles caching/etag in later phases. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={backendUrl(`/api/files/${fileId}/preview?page=${page}`)}
+        src={url}
         alt={alt}
         className={loaded ? "block w-full" : "hidden"}
         onLoad={() => setLoaded(true)}

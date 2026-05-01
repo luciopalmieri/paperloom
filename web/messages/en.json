@@ -24,6 +24,11 @@
     "en": "English",
     "it": "Italiano"
   },
+  "nav": {
+    "home": "Home",
+    "tools": "Tools",
+    "back-home": "Back to home"
+  },
   "tools": {
     "catalogue": {
       "title": "Tools",
@@ -103,9 +108,9 @@
     },
     "ocr-to-markdown": {
       "title": "OCR to Markdown",
-      "subtitle": "Drop a PDF. Get clean Markdown, page by page.",
-      "drop-here": "Drop a PDF here, or click to choose",
-      "drop-help": "PDF only · max {maxMb} MB · max {maxPages} pages",
+      "subtitle": "Drop a PDF or image. Get clean Markdown, page by page.",
+      "drop-here": "Drop a PDF or image here, or click to choose",
+      "drop-help": "PDF or image · max {maxMb} MB · max {maxPages} pages",
       "uploading": "Uploading…",
       "starting": "Starting OCR…",
       "page-of": "Page {page} of {filename}",
@@ -114,8 +119,9 @@
       "download": "Download {name} ({size})",
       "error-too-large": "File too large.",
       "error-too-many-pages": "PDF has too many pages.",
-      "error-not-pdf": "Only PDF files are supported in this phase.",
-      "error-generic": "Upload failed. Try again."
+      "error-not-supported": "Unsupported file type. Use a PDF or image.",
+      "error-generic": "Upload failed. Try again.",
+      "rotate": "Rotate 90°"
     }
   }
 }

@@ -24,6 +24,11 @@
     "en": "English",
     "it": "Italiano"
   },
+  "nav": {
+    "home": "Home",
+    "tools": "Strumenti",
+    "back-home": "Torna alla home"
+  },
   "tools": {
     "catalogue": {
       "title": "Strumenti",
@@ -103,9 +108,9 @@
     },
     "ocr-to-markdown": {
       "title": "OCR in Markdown",
-      "subtitle": "Carica un PDF. Ottieni Markdown pulito, pagina per pagina.",
-      "drop-here": "Trascina qui un PDF, o clicca per sceglierlo",
-      "drop-help": "Solo PDF · max {maxMb} MB · max {maxPages} pagine",
+      "subtitle": "Carica un PDF o un'immagine. Ottieni Markdown pulito, pagina per pagina.",
+      "drop-here": "Trascina qui un PDF o un'immagine, o clicca per sceglierlo",
+      "drop-help": "PDF o immagine · max {maxMb} MB · max {maxPages} pagine",
       "uploading": "Caricamento…",
       "starting": "Avvio OCR…",
       "page-of": "Pagina {page} di {filename}",
@@ -114,8 +119,9 @@
       "download": "Scarica {name} ({size})",
       "error-too-large": "File troppo grande.",
       "error-too-many-pages": "Il PDF ha troppe pagine.",
-      "error-not-pdf": "In questa fase sono supportati solo file PDF.",
-      "error-generic": "Caricamento fallito. Riprova."
+      "error-not-supported": "Tipo di file non supportato. Usa un PDF o un'immagine.",
+      "error-generic": "Caricamento fallito. Riprova.",
+      "rotate": "Ruota 90°"
     }
   }
 }
