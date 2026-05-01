@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp, Download, Plus, Trash2, Upload } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { OpfInstallBanner } from "@/components/anonymize/install-banner";
 import { AiBadge } from "@/components/ui/ai-badge";
@@ -148,8 +148,9 @@ export function ChainBuilder({ initial }: { initial?: string }) {
   const tParams = useTranslations("tools.params");
   const tCat = useTranslations("tools.catalogue");
 
+  const initialUid = useId();
   const initialNode = initial && TOOL_BY_SLUG.has(initial)
-    ? [{ uid: newUid(), slug: initial, params: defaultParams(TOOL_BY_SLUG.get(initial)!) }]
+    ? [{ uid: initialUid, slug: initial, params: defaultParams(TOOL_BY_SLUG.get(initial)!) }]
     : [];
 
   const [files, setFiles] = useState<FileState[]>([]);
