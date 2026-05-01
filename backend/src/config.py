@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     max_pdf_pages: int = 200
     max_files_per_job: int = 10
 
-    job_storage_root: str = "/tmp/pdf-ocr"
+    job_storage_root: str = "/tmp/paperloom"
     job_ttl_hours: int = 24
 
     cors_origin: str = "http://localhost:3000"

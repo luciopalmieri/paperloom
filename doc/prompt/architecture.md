@@ -94,7 +94,7 @@ errors.
 ## Job storage
 
 ```
-/tmp/pdf-ocr/
+/tmp/paperloom/
   <job_id>/
     inputs/             # uploaded files
     work/               # intermediate per-tool outputs

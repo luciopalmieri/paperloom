@@ -1,8 +1,8 @@
-# PageMind
+# Paperloom
 
 > **Intelligence for your documents. Stays on your machine.**
 
-**PageMind** is a local-first web app that pairs a streaming OCR
+**Paperloom** is a local-first web app that pairs a streaming OCR
 pipeline (GLM-OCR via [Ollama](https://ollama.ai)) with a chainable
 suite of PDF / Markdown / HTML / image tools. Your files never leave
 your computer — local AI by default, remote LLMs are an opt-in.

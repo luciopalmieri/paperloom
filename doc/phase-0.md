@@ -29,7 +29,7 @@ Inter-process:
 - Backend → Ollama: `POST http://localhost:11434/api/generate` with `stream: true`. Ollama returns **NDJSON** (newline-delimited JSON), one `{model, created_at, response, done}` object per line. Backend translates NDJSON → SSE for the browser.
 - **Do NOT use** Ollama's OpenAI-compatible endpoint (`/v1/chat/completions`). PROMPT bans it — vision returns `502 Bad Gateway`.
 
-Job storage `/tmp/pdf-ocr/<jobId>/` with 24h TTL cleaned by an async background task in FastAPI lifespan. CORS allows `http://localhost:3000` only. No auth, no queue, no GPU-only paths.
+Job storage `/tmp/paperloom/<jobId>/` with 24h TTL cleaned by an async background task in FastAPI lifespan. CORS allows `http://localhost:3000` only. No auth, no queue, no GPU-only paths.
 
 Limits enforced server-side (HTTP 413), mirrored client-side for UX:
 
@@ -49,7 +49,7 @@ Final layout after Phase 4. Each phase populates a subset; tree shown in full so
 ├── README.md                       # install steps incl. Ollama pull, OPF first-run note
 ├── LICENSE                         # MIT (already in repo)
 ├── CLAUDE.md                       # behavioural rules (already in repo)
-├── .gitignore                      # node_modules, .next, .venv, /tmp/pdf-ocr, ~/.opf
+├── .gitignore                      # node_modules, .next, .venv, /tmp/paperloom, ~/.opf
 │
 ├── doc/
 │   ├── phase-0.md                  # THIS FILE
@@ -140,7 +140,7 @@ Final layout after Phase 4. Each phase populates a subset; tree shown in full so
 │   │   ├── main.py                 # FastAPI app + lifespan (cleanup task) + CORS
 │   │   ├── config.py               # env: OPF_DEVICE, MAX_*, OLLAMA_URL, MODEL
 │   │   ├── sse.py                  # SSE response helper, NDJSON→SSE bridge
-│   │   ├── jobs.py                 # job lifecycle, /tmp/pdf-ocr/<id>/ layout
+│   │   ├── jobs.py                 # job lifecycle, /tmp/paperloom/<id>/ layout
 │   │   ├── chain.py                # sequential executor (DAG out of scope v1)
 │   │   │
 │   │   ├── routers/
@@ -561,7 +561,7 @@ services:
       MAX_FILES_PER_JOB: "10"
     volumes:
       - opf-cache:/root/.opf
-      - pdf-ocr-tmp:/tmp/pdf-ocr
+      - paperloom-tmp:/tmp/paperloom
     extra_hosts:
       - "host.docker.internal:host-gateway"   # Linux parity; macOS no-op
 
@@ -575,7 +575,7 @@ services:
 
 volumes:
   opf-cache:
-  pdf-ocr-tmp:
+  paperloom-tmp:
 ```
 
 ```yaml

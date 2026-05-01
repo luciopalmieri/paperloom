@@ -40,7 +40,7 @@ dist/
 .env.*.local
 
 # Job storage (runtime)
-/tmp/pdf-ocr/
+/tmp/paperloom/
 
 # OPF cache (model weights)
 .opf/

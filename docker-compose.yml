@@ -14,7 +14,7 @@ services:
       CORS_ORIGIN: "http://localhost:3000"
     volumes:
       - opf-cache:/root/.opf
-      - pdf-ocr-tmp:/tmp/pdf-ocr
+      - paperloom-tmp:/tmp/paperloom
     extra_hosts:
       # macOS Docker Desktop resolves host.docker.internal automatically;
       # this entry adds Linux parity so the same compose file works there.
@@ -35,4 +35,4 @@ services:
 
 volumes:
   opf-cache:
-  pdf-ocr-tmp:
+  paperloom-tmp:

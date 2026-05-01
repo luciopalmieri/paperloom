@@ -1,10 +1,10 @@
 {
   "app": {
-    "title": "PageMind",
+    "title": "Paperloom",
     "tagline": "Intelligence for your documents. Stays on your machine."
   },
   "home": {
-    "heading": "PageMind",
+    "heading": "Paperloom",
     "subheading": "Intelligence for your documents. Stays on your machine.",
     "ocr-cta": "OCR a document",
     "tools-cta": "Open the tool catalogue",

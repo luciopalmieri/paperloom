@@ -1,4 +1,4 @@
-# PROMPT — pdf-ocr
+# PROMPT — paperloom
 
 Local web app that turns dirty scanned PDFs and images into clean Markdown
 using a locally-hosted GLM-OCR model (via Ollama), and bundles a
@@ -29,7 +29,7 @@ Hybrid:
 - **Inter-process** — Frontend → Backend over REST + SSE for streaming.
   Backend → Ollama via `POST :11434/api/generate` (Ollama native, NOT
   OpenAI-compat — vision unstable there).
-- **Job storage** — filesystem `/tmp/pdf-ocr/<jobId>/`, TTL 24h, cleaned
+- **Job storage** — filesystem `/tmp/paperloom/<jobId>/`, TTL 24h, cleaned
   by a background task in FastAPI.
 - **Auth** — none. Single-user local app.
 - **Dev startup** — `npm run dev` runs Next + FastAPI together via

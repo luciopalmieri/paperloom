@@ -108,7 +108,7 @@ Emitted on every anonymize run, even if zero spans detected.
 - **No raw values in logs.** Never log the original span. Log only the
   hash + category.
 - **Temp files wiped on job completion** (success or failure). Job
-  storage TTL covered by the `/tmp/pdf-ocr/<jobId>/` cleanup task.
+  storage TTL covered by the `/tmp/paperloom/<jobId>/` cleanup task.
 - **Report contains hashes only** of original values (above).
 
 ## API surface (FastAPI)
