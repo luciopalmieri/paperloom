@@ -209,7 +209,11 @@
       "range-help": "Comma-separated pages or ranges (e.g. 1,3-5,7).",
       "pre-run-title": "{count} pages — pick what to convert",
       "pre-run-body": "Big documents take a while. Convert everything, or limit to specific pages.",
-      "run-all": "Convert all {n} pages"
+      "run-all": "Convert all {n} pages",
+      "include-figures-label": "Include figures",
+      "include-figures-help": "Crop figures and bundle them in the download.",
+      "figures-none-warning": "No figures could be cropped. The captions are still in the markdown.",
+      "figures-partial": "{saved} of {total} figures saved. The rest had no usable bounds — captions only."
     }
   }
 }

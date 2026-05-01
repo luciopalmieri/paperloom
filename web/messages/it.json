@@ -209,7 +209,11 @@
       "range-help": "Pagine o intervalli separati da virgola (es. 1,3-5,7).",
       "pre-run-title": "{count} pagine — scegli cosa convertire",
       "pre-run-body": "I documenti lunghi richiedono tempo. Converti tutto, oppure limita a pagine specifiche.",
-      "run-all": "Converti tutte le {n} pagine"
+      "run-all": "Converti tutte le {n} pagine",
+      "include-figures-label": "Includi figure",
+      "include-figures-help": "Ritaglia le figure e le include nello ZIP scaricato.",
+      "figures-none-warning": "Nessuna figura ritagliata. Le didascalie sono comunque nel markdown.",
+      "figures-partial": "{saved} di {total} figure salvate. Per le altre non è stato possibile ritagliarle — solo didascalia."
     }
   }
 }

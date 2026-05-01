@@ -32,6 +32,8 @@ type Artifact = { name: string; size: number; url: string };
 type RunStatus = "idle" | "uploading" | "running" | "cancelled" | "done" | "error";
 type PageStatus = "pending" | "processing" | "done" | "skipped" | "cancelled";
 
+type PageFigures = { saved: number; total: number };
+
 type State = {
   uploaded: UploadResp | null;
   jobId: string | null;
@@ -45,6 +47,8 @@ type State = {
   status: RunStatus;
   error: string | null;
   artifacts: Artifact[];
+  includeImages: boolean;
+  pageFigures: Record<number, PageFigures>;
 };
 
 const initialState: State = {
@@ -60,6 +64,8 @@ const initialState: State = {
   status: "idle",
   error: null,
   artifacts: [],
+  includeImages: false,
+  pageFigures: {},
 };
 
 const MAX_MB = 50;
@@ -101,10 +107,11 @@ export function OcrTool() {
   };
 
   const startOcrJob = useCallback(
-    async (uploaded: UploadResp, runPages: number[]) => {
+    async (uploaded: UploadResp, runPages: number[], includeImages: boolean) => {
       let jobId: string;
       const params: Record<string, unknown> = {};
       if (runPages.length > 0) params.pages = runPages;
+      if (includeImages) params.include_images = true;
       try {
         const r = await fetch(backendUrl("/api/jobs"), {
           method: "POST",
@@ -138,6 +145,7 @@ export function OcrTool() {
         artifacts: [],
         error: null,
         activePage: runPages[0] ?? 1,
+        pageFigures: {},
       }));
 
       const es = new EventSource(backendUrl(`/api/jobs/${jobId}/events`));
@@ -169,14 +177,51 @@ export function OcrTool() {
         });
       });
 
+      es.addEventListener("ocr.page.replace", (ev) => {
+        const data = JSON.parse((ev as MessageEvent).data) as {
+          page: number;
+          markdown_final: string;
+          figures_saved?: number;
+          figures_total?: number;
+        };
+        setState((s) => {
+          const fig: PageFigures = {
+            saved: data.figures_saved ?? 0,
+            total: data.figures_total ?? 0,
+          };
+          return {
+            ...s,
+            pages: { ...s.pages, [data.page]: data.markdown_final },
+            pageFigures: { ...s.pageFigures, [data.page]: fig },
+          };
+        });
+      });
+
       es.addEventListener("done", (ev) => {
         const data = JSON.parse((ev as MessageEvent).data) as { artifacts: Artifact[] };
-        setState((s) => ({
-          ...s,
-          artifacts: data.artifacts ?? [],
-          status: "done",
-          activePage: null,
-        }));
+        setState((s) => {
+          const totalSaved = Object.values(s.pageFigures).reduce(
+            (acc, f) => acc + f.saved,
+            0,
+          );
+          const totalDetected = Object.values(s.pageFigures).reduce(
+            (acc, f) => acc + f.total,
+            0,
+          );
+          if (s.includeImages && totalDetected > 0 && totalSaved === 0) {
+            toast.warning(t("figures-none-warning"));
+          } else if (s.includeImages && totalSaved > 0 && totalSaved < totalDetected) {
+            toast.info(
+              t("figures-partial", { saved: totalSaved, total: totalDetected }),
+            );
+          }
+          return {
+            ...s,
+            artifacts: data.artifacts ?? [],
+            status: "done",
+            activePage: null,
+          };
+        });
         es.close();
         esRef.current = null;
       });
@@ -204,7 +249,7 @@ export function OcrTool() {
   const restart = async () => {
     if (!state.uploaded) return;
     const parsed = parsePageRange(pageInput, state.totalPages);
-    await startOcrJob(state.uploaded, parsed);
+    await startOcrJob(state.uploaded, parsed, state.includeImages);
   };
 
   const replace = () => {
@@ -235,7 +280,7 @@ export function OcrTool() {
     }
     setPreviewBust((n) => n + 1);
     const uploaded = state.uploaded;
-    await startOcrJob(uploaded, []);
+    await startOcrJob(uploaded, [], state.includeImages);
   };
 
   const onUpload = async (file: File) => {
@@ -290,7 +335,7 @@ export function OcrTool() {
       setPendingRun(true);
       return;
     }
-    await startOcrJob(uploaded, []);
+    await startOcrJob(uploaded, [], state.includeImages);
   };
 
   const totalToProcess =
@@ -394,12 +439,12 @@ export function OcrTool() {
     if (!state.uploaded) return;
     const parsed = parsePageRange(pageInput, state.totalPages);
     if (parsed.length === 0) return;
-    await startOcrJob(state.uploaded, parsed);
+    await startOcrJob(state.uploaded, parsed, state.includeImages);
   };
 
   const runAll = async () => {
     if (!state.uploaded) return;
-    await startOcrJob(state.uploaded, []);
+    await startOcrJob(state.uploaded, [], state.includeImages);
   };
 
   return (
@@ -614,6 +659,25 @@ export function OcrTool() {
             </div>
           )}
 
+          <label
+            className={
+              "flex items-center gap-2 text-xs " +
+              (state.status === "running" ? "text-muted-foreground" : "")
+            }
+          >
+            <input
+              type="checkbox"
+              checked={state.includeImages}
+              disabled={state.status === "running"}
+              onChange={(e) =>
+                setState((s) => ({ ...s, includeImages: e.target.checked }))
+              }
+              className="h-3.5 w-3.5"
+            />
+            <span className="font-medium">{t("include-figures-label")}</span>
+            <span className="text-muted-foreground">{t("include-figures-help")}</span>
+          </label>
+
           <div role="tablist" aria-label={t("view-tabs-label")} className="flex gap-1 md:hidden">
             <MobileTab
               label={t("tab-pages")}
@@ -673,6 +737,7 @@ export function OcrTool() {
                         status={pageStatus(p)}
                         selected={selected.has(p)}
                         statusLabel={t(`page-status-${pageStatus(p)}`)}
+                        figures={state.pageFigures[p]}
                         onClick={() => jumpToPage(p)}
                         onToggle={() => toggleSelected(p)}
                         onKeyDown={(e) => onThumbKeyDown(e, p)}
@@ -806,6 +871,7 @@ function PageThumbnail({
   status,
   selected,
   statusLabel,
+  figures,
   onClick,
   onToggle,
   onKeyDown,
@@ -817,6 +883,7 @@ function PageThumbnail({
   status: PageStatus;
   selected: boolean;
   statusLabel: string;
+  figures?: PageFigures;
   onClick: () => void;
   onToggle: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
@@ -872,6 +939,20 @@ function PageThumbnail({
             <span className="text-muted-foreground text-[10px]">{statusLabel}</span>
           </span>
         </div>
+        {figures && figures.total > 0 && (
+          <div
+            className={
+              "mt-0.5 text-right text-[9px] tabular-nums " +
+              (figures.saved === 0
+                ? "text-amber-600 dark:text-amber-400"
+                : figures.saved === figures.total
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-amber-600 dark:text-amber-400")
+            }
+          >
+            {figures.saved}/{figures.total} fig
+          </div>
+        )}
       </button>
       <label
         className="absolute top-1.5 left-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded bg-background/90 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 has-[:checked]:opacity-100"
