@@ -92,9 +92,13 @@ def detect(text: str, *, preset: str = "balanced", device: str = "cpu") -> list[
     opf = _build_opf(preset, device)
     result = opf.redact(text)  # type: ignore[attr-defined]
 
+    # OPF's RedactionResult exposes hits as `detected_spans` with `label`,
+    # not `spans` / `category`. Tolerate both shapes so a future rename
+    # upstream does not silently regress to "no redactions".
+    raw_spans = getattr(result, "detected_spans", None) or getattr(result, "spans", [])
     spans: list[Span] = []
-    for raw in getattr(result, "spans", []):
-        category = getattr(raw, "category", None) or getattr(raw, "label", None)
+    for raw in raw_spans:
+        category = getattr(raw, "label", None) or getattr(raw, "category", None)
         start = getattr(raw, "start", None)
         end = getattr(raw, "end", None)
         if category not in CATEGORIES or start is None or end is None:
