@@ -1,14 +1,17 @@
 "use client";
 
-import { Download, RotateCw, Upload } from "lucide-react";
+import { ArrowRight, Copy, Download, RotateCw, Upload } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { AiBadge } from "@/components/ui/ai-badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "@/i18n/navigation";
 import { backendUrl } from "@/lib/api";
 
 type UploadResp = { file_id: string; filename: string; size: number; pages: number | null };
@@ -132,6 +135,10 @@ export function OcrTool() {
 
   const onRotate = async () => {
     if (!state.uploaded) return;
+    if (typeof window !== "undefined") {
+      const confirmed = window.confirm(t("rotate-confirm"));
+      if (!confirmed) return;
+    }
     esRef.current?.close();
     esRef.current = null;
     try {
@@ -214,8 +221,29 @@ export function OcrTool() {
     ? Math.round((state.doneCount / state.totalPages) * 100)
     : 0;
 
+  const fullMarkdown = useMemo(
+    () => state.pageOrder.map((p) => state.pages[p] ?? "").join("\n\n"),
+    [state.pageOrder, state.pages],
+  );
+
+  const onCopyMarkdown = async () => {
+    try {
+      await navigator.clipboard.writeText(fullMarkdown);
+      toast.success(t("copied"));
+    } catch {
+      toast.error(t("copy-failed"));
+    }
+  };
+
+  const liveAnnouncement =
+    state.totalPages > 0 && state.doneCount > 0
+      ? t("page-processed", { n: state.doneCount, total: state.totalPages })
+      : "";
+
+  const [mobileTab, setMobileTab] = useState<"preview" | "markdown">("preview");
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-6 py-8">
+    <main id="main" className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-6 py-8">
       <header className="flex items-start justify-between gap-4">
         <div>
           <div className="mb-2 flex items-center gap-2">
@@ -270,21 +298,100 @@ export function OcrTool() {
         <>
           <Progress value={progressPercent} aria-label={`${progressPercent}%`} />
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Card className="overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between gap-2">
-                <CardTitle className="text-sm font-medium">{state.uploaded.filename}</CardTitle>
-                {isImageName(state.uploaded.filename) && (
-                  <button
-                    type="button"
-                    onClick={onRotate}
-                    aria-label={t("rotate")}
-                    className="border-input hover:bg-muted inline-flex h-7 items-center gap-1 rounded-md border px-2 text-xs"
+          <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+            {liveAnnouncement}
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">{state.uploaded.filename}</span>
+              <span className="text-muted-foreground text-xs tabular-nums">
+                {f.number(state.doneCount)} / {f.number(state.totalPages)}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {isImageName(state.uploaded.filename) && (
+                <Button size="sm" variant="outline" onClick={onRotate}>
+                  <RotateCw className="mr-1 size-3" aria-hidden />
+                  {t("rotate")}
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onCopyMarkdown}
+                disabled={fullMarkdown.length === 0}
+              >
+                <Copy className="mr-1 size-3" aria-hidden />
+                {t("copy")}
+              </Button>
+              {state.artifacts.length > 0 &&
+                state.artifacts.map((a) => (
+                  <a
+                    key={a.name}
+                    href={backendUrl(a.url)}
+                    download={a.name}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-ring/50 inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none"
                   >
-                    <RotateCw className="size-3" aria-hidden />
-                    {t("rotate")}
-                  </button>
-                )}
+                    <Download className="size-3" aria-hidden />
+                    {t("download", {
+                      name: a.name,
+                      size: f.number(a.size, { style: "unit", unit: "byte" }),
+                    })}
+                  </a>
+                ))}
+              {state.uploaded && (
+                <Link
+                  href={`/tools/chain?initial=anonymize&from=${state.uploaded.file_id}`}
+                  className="border-input hover:bg-muted focus-visible:ring-ring/50 inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none"
+                >
+                  {t("continue")}
+                  <ArrowRight className="size-3" aria-hidden />
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div role="tablist" aria-label={t("view-tabs-label")} className="flex gap-1 md:hidden">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobileTab === "preview"}
+              onClick={() => setMobileTab("preview")}
+              className={
+                "focus-visible:ring-ring/50 inline-flex h-8 flex-1 items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none " +
+                (mobileTab === "preview"
+                  ? "bg-foreground text-background"
+                  : "border-input bg-background text-muted-foreground border")
+              }
+            >
+              {t("tab-preview")}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobileTab === "markdown"}
+              onClick={() => setMobileTab("markdown")}
+              className={
+                "focus-visible:ring-ring/50 inline-flex h-8 flex-1 items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none " +
+                (mobileTab === "markdown"
+                  ? "bg-foreground text-background"
+                  : "border-input bg-background text-muted-foreground border")
+              }
+            >
+              {t("tab-markdown")}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Card
+              className={
+                "overflow-hidden " +
+                (mobileTab === "preview" ? "" : "hidden md:block")
+              }
+            >
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">{t("tab-preview")}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[70vh]">
@@ -303,14 +410,18 @@ export function OcrTool() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden">
+            <Card
+              className={
+                "overflow-hidden " +
+                (mobileTab === "markdown" ? "" : "hidden md:block")
+              }
+            >
               <CardHeader>
-                <CardTitle className="text-sm font-medium">Markdown</CardTitle>
+                <CardTitle className="text-sm font-medium">{t("tab-markdown")}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[70vh]">
                   <div
-                    aria-live="polite"
                     aria-label={t("stream-region")}
                     className="prose prose-sm dark:prose-invert max-w-none p-4"
                   >
@@ -330,30 +441,6 @@ export function OcrTool() {
                 </ScrollArea>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <p className="text-muted-foreground text-xs">
-              {f.number(state.doneCount)} / {f.number(state.totalPages)}
-            </p>
-            {state.artifacts.length > 0 && (
-              <div className="flex gap-2">
-                {state.artifacts.map((a) => (
-                  <a
-                    key={a.name}
-                    href={backendUrl(a.url)}
-                    download={a.name}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium"
-                  >
-                    <Download className="size-4" aria-hidden />
-                    {t("download", {
-                      name: a.name,
-                      size: f.number(a.size, { style: "unit", unit: "byte" }),
-                    })}
-                  </a>
-                ))}
-              </div>
-            )}
           </div>
         </>
       )}

@@ -5,7 +5,10 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { AppHeader } from "@/components/shell/app-header";
+import { SkipLink } from "@/components/shell/skip-link";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 import { routing } from "@/i18n/routing";
 
 import "../globals.css";
@@ -46,7 +49,12 @@ export default async function LocaleLayout({ children, params }: Props) {
     <html lang={locale} suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
-          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+          <NextIntlClientProvider>
+            <SkipLink />
+            <AppHeader />
+            {children}
+            <Toaster richColors closeButton position="bottom-right" />
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>
