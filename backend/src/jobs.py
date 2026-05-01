@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import time
 import uuid
@@ -8,6 +9,27 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from src.config import settings
+
+_HEX32 = re.compile(r"^[0-9a-f]{32}$")
+
+
+def _is_safe_id(value: str) -> bool:
+    return bool(_HEX32.fullmatch(value))
+
+
+def safe_under(candidate: Path, root: Path) -> Path:
+    """Resolve `candidate` and assert it lives under `root`.
+
+    Raises ValueError on traversal. Used by every code path that turns
+    user-supplied identifiers into filesystem paths (HTTP routers, MCP
+    wrapper). Symlinks are resolved so a symlink under `root` cannot
+    point outside.
+    """
+    root_real = root.resolve()
+    real = candidate.resolve()
+    if root_real != real and root_real not in real.parents:
+        raise ValueError(f"path escapes root: {candidate}")
+    return real
 
 
 @dataclass(slots=True)
@@ -29,7 +51,13 @@ class Job:
 
 
 def _root() -> Path:
-    return Path(settings.job_storage_root)
+    root = Path(settings.job_storage_root)
+    if not root.exists():
+        # 0700: storage holds user-uploaded PDFs and (optionally) anonymizer
+        # reports. On a multi-user machine the previous /tmp default exposed
+        # them to anyone with read access — keep them owner-only.
+        root.mkdir(parents=True, mode=0o700, exist_ok=True)
+    return root
 
 
 def _files_root() -> Path:
@@ -47,6 +75,8 @@ def store_file(filename: str, content: bytes, pages: int | None) -> FileEntry:
 
 
 def find_file(file_id: str) -> FileEntry | None:
+    if not _is_safe_id(file_id):
+        return None
     dir_ = _files_root() / file_id
     if not dir_.is_dir():
         return None
@@ -55,6 +85,13 @@ def find_file(file_id: str) -> FileEntry | None:
         return None
     p = candidates[0]
     return FileEntry(file_id=file_id, filename=p.name, size=p.stat().st_size, pages=None, path=p)
+
+
+def find_job_root(job_id: str) -> Path | None:
+    if not _is_safe_id(job_id):
+        return None
+    root = _root() / job_id
+    return root if root.is_dir() else None
 
 
 def create_job(chain: list[dict[str, object]], inputs: list[str]) -> Job:

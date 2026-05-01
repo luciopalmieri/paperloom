@@ -42,9 +42,15 @@ export function OpfInstallBanner() {
   if (installed === true) return null;
 
   return (
-    <Card className="border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/40">
+    <Card
+      role="region"
+      aria-labelledby="opf-install-title"
+      className="border-amber-300 bg-amber-100 text-amber-950 dark:border-amber-700 dark:bg-amber-900/50 dark:text-amber-50"
+    >
       <CardHeader>
-        <CardTitle className="text-base">{t("install-title")}</CardTitle>
+        <CardTitle id="opf-install-title" className="text-base">
+          {t("install-title")}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 text-sm">
         <p>{t("install-body")}</p>

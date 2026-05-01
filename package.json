@@ -5,10 +5,11 @@
   "description": "Paperloom — local OCR + document tools webapp. Next.js + FastAPI + Ollama.",
   "packageManager": "pnpm@10.33.2",
   "scripts": {
-    "dev": "concurrently -n web,api -c blue,magenta \"pnpm --filter paperloom-web dev\" \"cd backend && uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload\"",
+    "dev": "concurrently -n web,api -c blue,magenta \"pnpm --filter paperloom-web dev\" \"cd backend && uv run uvicorn src.main:app --host 127.0.0.1 --port 8000 --reload\"",
     "build:web": "pnpm --filter paperloom-web build",
     "lint:web": "pnpm --filter paperloom-web lint",
     "test:api": "cd backend && uv run pytest",
+    "mcp": "cd backend && uv run python -m src.mcp_server",
     "install:all": "pnpm install && cd backend && uv sync",
     "install:opf": "cd backend && uv sync --extra anonymizer"
   },
