@@ -32,7 +32,7 @@ Hybrid:
 - **Job storage** — filesystem `/tmp/paperloom/<jobId>/`, TTL 24h, cleaned
   by a background task in FastAPI.
 - **Auth** — none. Single-user local app.
-- **Dev startup** — `npm run dev` runs Next + FastAPI together via
+- **Dev startup** — `pnpm dev` runs Next + FastAPI together via
   `concurrently`.
 
 Full inter-process contract: see [`architecture.md`](./architecture.md).
@@ -256,7 +256,7 @@ anonymizer, i18n, and theming — each its own phase.
   ask for.
 - An anonymizer that calls a remote API or leaks input bytes off-box.
 
-**Success means**: I run `npm run dev`, drop a scanned PDF, see pages on
+**Success means**: I run `pnpm dev`, drop a scanned PDF, see pages on
 the left, GLM-OCR Markdown streaming on the right, switch IT↔EN and
 dark↔light without reload, go to `/tools`, chain
 `pdf-to-images → ocr-to-markdown → anonymize`, and download a zip

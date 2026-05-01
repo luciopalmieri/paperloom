@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { backendUrl } from "@/lib/api";
 
-const INSTALL_COMMAND = "npm run install:opf";
-const RESTART_COMMAND = "npm run dev";
+const INSTALL_COMMAND = "pnpm install:opf";
+const RESTART_COMMAND = "pnpm dev";
 
 type Health = { ollama: boolean; opf: boolean };
 

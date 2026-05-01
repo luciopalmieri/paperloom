@@ -22,7 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 # Pulled in only when the user opts into the OPF anonymizer (see UI banner
 # on /tools/chain when an anonymize node is added without OPF installed).
-# Activate with: uv sync --extra anonymizer  (or `npm run install:opf`).
+# Activate with: uv sync --extra anonymizer  (or `pnpm install:opf`).
 anonymizer = ["opf"]
 
 [tool.uv.sources]

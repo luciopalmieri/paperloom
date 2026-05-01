@@ -10,7 +10,7 @@ Hybrid Next.js + FastAPI contract.
 | FastAPI | 8000  | `backend/` | PDF tools, OCR adapter, OPF anonymizer    |
 | Ollama  | 11434 | system  | `glm-ocr:latest` inference                    |
 
-`npm run dev` runs Next + FastAPI together via `concurrently`. Ollama
+`pnpm dev` runs Next + FastAPI together via `concurrently`. Ollama
 must already be running (user installs separately — see `README.md`).
 
 ## Repo layout

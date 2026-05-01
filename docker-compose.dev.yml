@@ -9,7 +9,7 @@ services:
   web:
     build:
       target: dev
-    command: ["npm", "run", "dev"]
+    command: ["pnpm", "dev"]
     volumes:
       - ./web:/app
       # Anonymous volumes preserve container-installed artefacts that the

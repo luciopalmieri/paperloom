@@ -226,7 +226,7 @@ Dev:
 |------------------|-----------------------------------------------|
 | `typescript`, `@types/react`, `@types/react-dom`, `@types/node` | TS support  |
 | `eslint`, `eslint-config-next` | lint                            |
-| `concurrently`   | root `npm run dev` runs Next + FastAPI together |
+| `concurrently`   | root `pnpm dev` runs Next + FastAPI together |
 
 shadcn primitives are CLI-installed (`npx shadcn@latest add <name>`); each pulls the required Radix sub-deps. No raw Radix imports per `shadcn-rules.md`.
 
@@ -508,7 +508,7 @@ Errors:
 | Phase | Goal | Verify |
 |-------|------|--------|
 | **0** | This doc. | User reads, approves. |
-| **1** | Skeletons (`web/`, `backend/`), `concurrently` dev script, `next-intl` locale-prefixed routes (`/it`, `/en`), `next-themes`, shadcn init (Tailwind v4 + neutral + CSS vars), `GET /api/health`. | `npm run dev` boots both; `curl :8000/api/health` returns JSON; locale + theme toggles work no-reload; `<html lang>` updates on switch. |
+| **1** | Skeletons (`web/`, `backend/`), `concurrently` dev script, `next-intl` locale-prefixed routes (`/it`, `/en`), `next-themes`, shadcn init (Tailwind v4 + neutral + CSS vars), `GET /api/health`. | `pnpm dev` boots both; `curl :8000/api/health` returns JSON; locale + theme toggles work no-reload; `<html lang>` updates on switch. |
 | **2** | Upload + OCR split-view with **stub** adapter. `POST /api/files`, `pypdfium2` page render, SSE plumbing, canned MD chunks per page, AI badge, `aria-live` region. | Drop scanned PDF → pages render left, canned MD streams right per page, scroll-sync. |
 | **3** | Real Ollama OCR + figures + zip + tool catalogue + sequential chain builder + 17 deterministic tools. | Chain `pdf-to-images → ocr-to-markdown` runs end-to-end; zip downloads; all tools reachable from catalogue; chain builder fully keyboard-driven. |
 | **4** | Anonymizer (OPF) + IT banner + report + no-egress lint + PROMPT success scenario end-to-end. **First sub-task**: read OPF README, lock §5.4 preset mapping, append to this doc. | PROMPT success — drop scanned PDF, chain `pdf-to-images → ocr-to-markdown → anonymize`, download zip with `out.md` + `images/` + `redactions.report.json`. |
@@ -614,11 +614,11 @@ export const backendUrl = (path: string) => {
 
 ### 9.4 README addition
 
-Two clearly-labelled sections: **Native (default)** and **Docker (alternative)**. Native section keeps the existing `npm run dev` flow. Docker section shows `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build` and notes that Ollama must be running natively beforehand.
+Two clearly-labelled sections: **Native (default)** and **Docker (alternative)**. Native section keeps the existing `pnpm dev` flow. Docker section shows `docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build` and notes that Ollama must be running natively beforehand.
 
 ### 9.5 Phase placement
 
-- **Phase 1a** — native skeletons + `npm run dev` (per §7 Phase 1 row).
+- **Phase 1a** — native skeletons + `pnpm dev` (per §7 Phase 1 row).
 - **Phase 1b** — Docker files. Verifiable independently: `docker compose up --build` boots both, `:3000` serves the same home page, `:8000/api/health` returns JSON, browser `EventSource` from container web → container backend works.
 
 Phase 1b is intentionally small (~5 files, ~150 LOC) and gated behind 1a passing — keeps both paths green.

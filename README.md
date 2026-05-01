@@ -31,10 +31,10 @@ your computer — local AI by default, remote LLMs are an opt-in.
 ollama pull glm-ocr:latest
 
 # 2. Install JS + Python deps
-npm run install:all
+pnpm install:all
 
 # 3. Run the app
-npm run dev
+pnpm dev
 ```
 
 Open <http://localhost:3000>. That's it.
@@ -88,11 +88,11 @@ installed, the UI shows an in-app banner explaining the trade-off
 and giving you the install command to copy. Or run it directly:
 
 ```bash
-npm run install:opf
+pnpm install:opf
 ```
 
 That maps to `cd backend && uv sync --extra anonymizer`. Restart
-`npm run dev` afterwards. Everything stays on your machine — no
+`pnpm dev` afterwards. Everything stays on your machine — no
 telemetry, no cloud round-trips. Once installed, subsequent runs
 are fully offline.
 
@@ -150,13 +150,13 @@ Full design: [`doc/prompt/architecture.md`](doc/prompt/architecture.md).
 ## Development
 
 ```bash
-npm run dev          # web + api with reload
-npm run lint:web     # ESLint flat config
-npm run build:web    # production web build
-npm run test:api     # backend pytest
+pnpm dev             # web + api with reload
+pnpm lint:web        # ESLint flat config
+pnpm build:web       # production web build
+pnpm test:api        # backend pytest
 ```
 
-The repo is a Turborepo-style npm workspace: the web app lives in
+The repo is a pnpm workspace: the web app lives in
 `web/`, the FastAPI backend in `backend/`, and shared docs in `doc/`.
 
 ## Documentation

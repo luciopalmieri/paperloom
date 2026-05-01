@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint ."
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -27,11 +27,12 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
+    "@next/eslint-plugin-next": "^16.2.4",
     "@tailwindcss/postcss": "^4.2.4",
-    "concurrently": "^9.1.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "concurrently": "^9.1.0",
     "eslint": "^9.17.0",
     "eslint-config-next": "^16.2.4",
     "tailwindcss": "^4.2.4",
