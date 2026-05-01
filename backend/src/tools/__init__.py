@@ -30,8 +30,19 @@ def list_tools() -> list[str]:
 
 # Importing the modules below registers each handler in REGISTRY.
 from src.tools import (  # noqa: E402,F401
+    add_page_numbers,
+    add_watermark,
+    compress_pdf,
+    delete_pages,
+    extract_pages,
+    images_to_pdf,
+    markdown_to_html,
     merge_pdfs,
     ocr_to_markdown,
     pdf_to_images,
     pdf_to_text,
+    reorder_pages,
+    rotate_pages,
+    split_pdf,
+    strip_metadata,
 )

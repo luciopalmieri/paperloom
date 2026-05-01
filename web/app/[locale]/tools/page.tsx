@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { ToolTile } from "@/components/catalogue/tile";
+import { Link } from "@/i18n/navigation";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -10,6 +11,8 @@ type Entry = {
   available: boolean;
   href?: string;
 };
+
+const chainHref = (slug: string) => `/tools/chain?initial=${slug}`;
 
 const SECTIONS: { key: "ai" | "conversion" | "manipulation"; tools: Entry[] }[] = [
   {
@@ -27,28 +30,28 @@ const SECTIONS: { key: "ai" | "conversion" | "manipulation"; tools: Entry[] }[] 
   {
     key: "conversion",
     tools: [
-      { slug: "pdf-to-images", available: false },
-      { slug: "images-to-pdf", available: false },
-      { slug: "pdf-to-text", available: false },
+      { slug: "pdf-to-images", available: true, href: chainHref("pdf-to-images") },
+      { slug: "images-to-pdf", available: true, href: chainHref("images-to-pdf") },
+      { slug: "pdf-to-text", available: true, href: chainHref("pdf-to-text") },
       { slug: "pdf-to-html", available: false },
       { slug: "html-to-pdf", available: false },
       { slug: "markdown-to-pdf", available: false },
-      { slug: "markdown-to-html", available: false },
+      { slug: "markdown-to-html", available: true, href: chainHref("markdown-to-html") },
     ],
   },
   {
     key: "manipulation",
     tools: [
-      { slug: "merge-pdfs", available: false },
-      { slug: "split-pdf", available: false },
-      { slug: "compress-pdf", available: false },
-      { slug: "rotate-pages", available: false },
-      { slug: "reorder-pages", available: false },
-      { slug: "delete-pages", available: false },
-      { slug: "extract-pages", available: false },
-      { slug: "add-page-numbers", available: false },
-      { slug: "add-watermark", available: false },
-      { slug: "strip-metadata", available: false },
+      { slug: "merge-pdfs", available: true, href: chainHref("merge-pdfs") },
+      { slug: "split-pdf", available: true, href: chainHref("split-pdf") },
+      { slug: "compress-pdf", available: true, href: chainHref("compress-pdf") },
+      { slug: "rotate-pages", available: true, href: chainHref("rotate-pages") },
+      { slug: "reorder-pages", available: true, href: chainHref("reorder-pages") },
+      { slug: "delete-pages", available: true, href: chainHref("delete-pages") },
+      { slug: "extract-pages", available: true, href: chainHref("extract-pages") },
+      { slug: "add-page-numbers", available: true, href: chainHref("add-page-numbers") },
+      { slug: "add-watermark", available: true, href: chainHref("add-watermark") },
+      { slug: "strip-metadata", available: true, href: chainHref("strip-metadata") },
     ],
   },
 ];
@@ -61,9 +64,17 @@ export default async function ToolsCataloguePage({ params }: Props) {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-8">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">{tCat("title")}</h1>
-        <p className="text-muted-foreground mt-1">{tCat("subtitle")}</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">{tCat("title")}</h1>
+          <p className="text-muted-foreground mt-1">{tCat("subtitle")}</p>
+        </div>
+        <Link
+          href="/tools/chain"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-medium"
+        >
+          {tCat("open-chain")}
+        </Link>
       </header>
 
       {SECTIONS.map((section) => (
