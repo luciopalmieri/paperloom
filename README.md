@@ -109,6 +109,68 @@ brew install pango
 Without these, the three converters still appear but emit
 `weasyprint_unavailable`. `pdf-to-html` does **not** need them.
 
+### MCP server (use paperloom from Claude Desktop / Claude Code)
+
+Paperloom ships an [MCP](https://modelcontextprotocol.io) server that
+exposes every tool to local LLM clients. The server speaks `stdio`, so
+nothing is exposed on the network.
+
+```bash
+pnpm mcp
+# or, from backend/:
+uv run python -m src.mcp_server
+```
+
+#### Wire into Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`
+(macOS) or the Windows / Linux equivalent:
+
+```json
+{
+  "mcpServers": {
+    "paperloom": {
+      "command": "uv",
+      "args": [
+        "--directory", "/absolute/path/to/paperloom/backend",
+        "run", "python", "-m", "src.mcp_server"
+      ],
+      "env": {
+        "PAPERLOOM_MCP_ALLOWED_DIRS": "/Users/you/Documents,/Users/you/Downloads"
+      }
+    }
+  }
+}
+```
+
+Restart Claude Desktop. You should see `paperloom` listed under tools.
+
+#### What the LLM can do
+
+- `register_file(path)` / `register_inline(filename, base64)` — bring a
+  file into paperloom, get a `file_id` back.
+- `ocr_to_markdown`, `anonymize`, `pdf_to_text`, `pdf_to_images`,
+  `extract_pages`, `merge_pdfs`, `add_watermark`, … — one tool per
+  paperloom slug, with typed params.
+- `run_tool(slug, file_ids, params)` — generic dispatcher for slugs
+  without a dedicated wrapper.
+- `list_paperloom_tools()` — discover slugs and their param hints.
+
+#### Security
+
+- **Path allowlist.** `register_file` only accepts paths under the dirs
+  in `PAPERLOOM_MCP_ALLOWED_DIRS` (default: `~/Documents`, `~/Downloads`,
+  `~/Desktop`). Symlinks are resolved before the check, so a symlink
+  inside an allowed dir pointing outside is rejected.
+- **No raw paths in tool args.** All processing goes through `file_id`
+  tokens validated as 32-char hex. The LLM cannot ask paperloom to
+  operate on `/etc/passwd` or `~/.ssh/id_rsa` — even if a malicious
+  document tries to inject that instruction.
+- **stdio only.** No HTTP listener, no auth needed: the same trust
+  boundary as the user that launched Claude Desktop.
+- **Same size limits as the web upload.** `max_file_size_mb` (50) and
+  `max_pdf_pages` (200) apply.
+
 ### Docker (alternative)
 
 Containerises only `web` and `backend` — Ollama stays native on the

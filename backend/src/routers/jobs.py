@@ -44,8 +44,8 @@ async def create(body: CreateJobBody) -> dict[str, str]:
 
 @router.get("/{job_id}/events")
 async def events(job_id: str) -> StreamingResponse:
-    job_root = jobs_mod._root() / job_id
-    if not job_root.is_dir():
+    job_root = jobs_mod.find_job_root(job_id)
+    if job_root is None:
         raise HTTPException(status_code=404, detail={"code": "job_not_found"})
 
     meta = json.loads((job_root / "job.json").read_text())
@@ -78,7 +78,16 @@ async def events(job_id: str) -> StreamingResponse:
 async def artifact(job_id: str, name: str) -> FileResponse:
     if "/" in name or ".." in name:
         raise HTTPException(status_code=400, detail={"code": "bad_artifact_name"})
-    path = jobs_mod._root() / job_id / name
+    job_root = jobs_mod.find_job_root(job_id)
+    if job_root is None:
+        raise HTTPException(status_code=404, detail={"code": "job_not_found"})
+    path = job_root / name
+    try:
+        path = jobs_mod.safe_under(path, job_root)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400, detail={"code": "bad_artifact_name"}
+        ) from exc
     if not path.is_file():
         raise HTTPException(status_code=404, detail={"code": "artifact_not_found"})
     return FileResponse(path, filename=name)
