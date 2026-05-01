@@ -40,6 +40,11 @@ Full design: [`doc/prompt/architecture.md`](doc/prompt/architecture.md).
   ```
 - ~4 GB free disk for the OPF model checkpoint (downloaded on first
   run to `~/.opf/privacy_filter`)
+- For the HTML/Markdown → PDF tools (Phase 3d): native libraries
+  required by WeasyPrint. On macOS: `brew install pango`. Without
+  these, the three tools are still listed in the catalogue but emit
+  a `weasyprint_unavailable` event when invoked. `pdf-to-html` does
+  not need them.
 
 ## Setup — native (default)
 

@@ -78,6 +78,9 @@ const TOOLS: ToolDef[] = [
   { slug: "strip-metadata", params: [] },
   { slug: "images-to-pdf", params: [] },
   { slug: "markdown-to-html", params: [] },
+  { slug: "markdown-to-pdf", params: [] },
+  { slug: "html-to-pdf", params: [] },
+  { slug: "pdf-to-html", params: [] },
   {
     slug: "add-page-numbers",
     params: [
