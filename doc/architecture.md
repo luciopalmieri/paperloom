@@ -24,17 +24,28 @@ must already be running (user installs separately — see `README.md`).
 │   ├── i18n/
 │   ├── messages/
 │   └── lib/
-├── backend/            # FastAPI + OPF + OCR adapter
-│   ├── pyproject.toml  # uv-managed
-│   ├── src/
-│   │   ├── main.py
+├── backend/            # FastAPI + OPF + OCR adapter (also published to PyPI as `paperloom`)
+│   ├── pyproject.toml  # uv-managed, hatchling build
+│   ├── README.md       # PyPI-facing
+│   ├── paperloom/      # the importable package
+│   │   ├── __init__.py # public API exports
+│   │   ├── _api.py     # ocr_to_markdown / anonymize / Chain wrappers
+│   │   ├── cli.py      # `paperloom` CLI entry
+│   │   ├── mcp_server.py # `paperloom-mcp` entry
+│   │   ├── main.py     # FastAPI app
 │   │   ├── routers/
 │   │   ├── tools/
 │   │   ├── ocr/
 │   │   └── anonymizer/
-│   └── tests/
+│   └── tests/          # pytest + bench/ harness
+├── .claude-plugin/     # Claude Code plugin manifest, skills, slash commands
 ├── doc/
-│   └── prompt/         # PROMPT.md + rule files
+│   ├── architecture.md # this file
+│   ├── distribution.md
+│   ├── benchmarks.md
+│   ├── cookbook/       # copy-paste recipes
+│   ├── rules/          # live conventions (anonymizer, a11y, i18n, shadcn)
+│   └── archive/        # historical: PROMPT.md, phase-0.md
 ├── README.md
 ├── LICENSE             # MIT
 └── CLAUDE.md

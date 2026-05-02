@@ -3,7 +3,7 @@ from __future__ import annotations
 import importlib.util
 from dataclasses import dataclass
 
-# OPF's 8 categories. Verbatim from anonymizer-rules.md — DO NOT extend
+# OPF's 8 categories. Verbatim from doc/rules/anonymizer.md — DO NOT extend
 # or rename. The OCR / external code paths must accept these strings as-is.
 CATEGORIES: tuple[str, ...] = (
     "account_number",

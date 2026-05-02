@@ -39,7 +39,7 @@ async def run(
     """Anonymise text inputs (.md / .txt) via OPF.
 
     PDFs/images must run through ocr-to-markdown first — anonymizer is
-    text-only by design (anonymizer-rules.md). Phase 4 v1 keeps the
+    text-only by design (doc/rules/anonymizer.md). Phase 4 v1 keeps the
     chain explicit: caller composes ocr-to-markdown → anonymize.
     """
     preset = str(params.get("preset", "balanced"))

@@ -20,7 +20,7 @@ def apply(text: str, spans: list[Span]) -> tuple[str, list[RedactedSpan]]:
     """Replace each span with `[REDACTED:{CATEGORY}:{N}]`.
 
     N is 1-indexed per category, per document (the chain is one job, so the
-    reset-per-job rule from anonymizer-rules.md collapses to per-document).
+    reset-per-job rule from doc/rules/anonymizer.md collapses to per-document).
     Spans must not overlap; if they do, later spans are skipped — OPF is
     expected to dedupe upstream when `discard_overlapping_predicted_spans`
     is on.

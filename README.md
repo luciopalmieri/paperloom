@@ -194,7 +194,7 @@ The MCP server is the most exposed surface, so it's locked down:
 - **Backend** — FastAPI on Python 3.11+, `uv` for deps, SSE streams for OCR + chain progress.
 - **Models** — Ollama (`glm-ocr:latest`) + OpenAI Privacy Filter (CPU by default).
 
-Full design: [`doc/prompt/architecture.md`](doc/prompt/architecture.md).
+Full design: [`doc/architecture.md`](doc/architecture.md).
 
 ---
 
@@ -213,12 +213,16 @@ The repo is a pnpm workspace: web app in `web/`, FastAPI backend (and the Python
 
 ## Documentation
 
+- [`doc/architecture.md`](doc/architecture.md) — inter-process contract.
 - [`doc/distribution.md`](doc/distribution.md) — install paths and packaging strategy.
 - [`doc/cookbook/`](doc/cookbook/) — copy-paste recipes (RAG ingest, redact medical records, batch invoice merge, Agno integration).
 - [`doc/benchmarks.md`](doc/benchmarks.md) — paperloom vs. marker vs. docling on a fixed corpus.
-- [`doc/phase-0.md`](doc/phase-0.md) — execution plan, file tree, pipeline contracts, Docker spec.
-- [`doc/prompt/architecture.md`](doc/prompt/architecture.md) — inter-process contract.
-- [`doc/prompt/anonymizer-rules.md`](doc/prompt/anonymizer-rules.md) — OPF integration rules.
+- [`doc/rules/`](doc/rules/) — coding/UI conventions:
+  [`anonymizer`](doc/rules/anonymizer.md),
+  [`a11y`](doc/rules/a11y.md),
+  [`i18n`](doc/rules/i18n.md),
+  [`shadcn`](doc/rules/shadcn.md).
+- [`doc/archive/`](doc/archive/) — historical planning docs (`PROMPT.md`, `phase-0.md`); not maintained.
 
 ## License
 

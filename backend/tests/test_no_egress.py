@@ -1,6 +1,6 @@
 """CI lint: paperloom/anonymizer/** must NEVER import network clients.
 
-Per anonymizer-rules.md "Privacy guarantees": no outbound HTTP from the
+Per doc/rules/anonymizer.md "Privacy guarantees": no outbound HTTP from the
 anonymizer code path. This test AST-walks every .py file under
 backend/paperloom/anonymizer/ and fails the build if it finds any of the
 banned imports.
