@@ -44,8 +44,7 @@ must already be running (user installs separately — see `README.md`).
 │   ├── distribution.md
 │   ├── benchmarks.md
 │   ├── cookbook/       # copy-paste recipes
-│   ├── rules/          # live conventions (anonymizer, a11y, i18n, shadcn)
-│   └── archive/        # historical: PROMPT.md, phase-0.md
+│   └── rules/          # live conventions (anonymizer, a11y, i18n, shadcn)
 ├── README.md
 ├── LICENSE             # MIT
 └── CLAUDE.md

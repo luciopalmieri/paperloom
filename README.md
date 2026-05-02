@@ -222,7 +222,6 @@ The repo is a pnpm workspace: web app in `web/`, FastAPI backend (and the Python
   [`a11y`](doc/rules/a11y.md),
   [`i18n`](doc/rules/i18n.md),
   [`shadcn`](doc/rules/shadcn.md).
-- [`doc/archive/`](doc/archive/) — historical planning docs (`PROMPT.md`, `phase-0.md`); not maintained.
 
 ## License
 
