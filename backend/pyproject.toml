@@ -1,9 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "paperloom-backend"
+name = "paperloom"
 version = "0.1.0"
-description = "FastAPI backend for paperloom (OCR adapter, PDF tools, OPF anonymizer)."
+description = "Local-first document toolkit. Streaming OCR (GLM-OCR via Ollama), PII anonymizer, and 19 chainable PDF/Markdown/HTML tools. MCP server included."
 readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Lucio Palmieri" }]
 requires-python = ">=3.11,<3.14"
+keywords = [
+    "ocr", "pdf", "markdown", "anonymization", "privacy",
+    "local-first", "mcp", "llm", "ollama", "agent",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Markup",
+    "Topic :: Multimedia :: Graphics :: Capture :: Scanners",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
@@ -16,15 +39,27 @@ dependencies = [
     "Pillow>=11.0.0",
     "markdown-it-py>=3.0.0",
     "reportlab>=4.2.0",
-    "weasyprint>=68.1",
     "mcp>=1.12.0",
 ]
 
 [project.optional-dependencies]
-# Pulled in only when the user opts into the OPF anonymizer (see UI banner
-# on /tools/chain when an anonymize node is added without OPF installed).
-# Activate with: uv sync --extra anonymizer  (or `pnpm install:opf`).
+# WeasyPrint needs native libs (pango/cairo). Opt-in to avoid surprising
+# `uvx paperloom` users who only need OCR.
+pdf = ["weasyprint>=68.1"]
+# OPF anonymizer — torch + transformers + ~4 GB checkpoint. Opt-in.
 anonymizer = ["opf"]
+# All extras (web UI / dev convenience).
+all = ["weasyprint>=68.1", "opf"]
+
+[project.scripts]
+paperloom = "paperloom.cli:main"
+paperloom-mcp = "paperloom.mcp_server:main"
+
+[project.urls]
+Homepage = "https://github.com/luciopalmieri/paperloom"
+Repository = "https://github.com/luciopalmieri/paperloom"
+Issues = "https://github.com/luciopalmieri/paperloom/issues"
+Documentation = "https://github.com/luciopalmieri/paperloom/tree/main/doc"
 
 [tool.uv.sources]
 opf = { git = "https://github.com/openai/privacy-filter.git", rev = "main" }
@@ -37,8 +72,11 @@ dev = [
     "mypy>=1.13.0",
 ]
 
-[tool.uv]
-package = false
+[tool.hatch.build.targets.wheel]
+packages = ["paperloom"]
+
+[tool.hatch.build.targets.sdist]
+include = ["paperloom", "tests", "README.md", "pyproject.toml"]
 
 [tool.ruff]
 line-length = 100

@@ -1,8 +1,8 @@
 services:
   backend:
-    command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["uv", "run", "uvicorn", "paperloom.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
-      - ./backend/src:/app/src
+      - ./backend/paperloom:/app/paperloom
       - ./backend/tests:/app/tests
       - ./backend/pyproject.toml:/app/pyproject.toml
 

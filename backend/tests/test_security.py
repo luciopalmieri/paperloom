@@ -3,9 +3,9 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from src import jobs as jobs_mod
-from src.config import settings
-from src.main import app
+from paperloom import jobs as jobs_mod
+from paperloom.config import settings
+from paperloom.main import app
 
 
 @pytest.mark.parametrize(

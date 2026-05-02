@@ -6,8 +6,8 @@ import pypdfium2 as pdfium
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from src.config import settings
-from src.main import app
+from paperloom.config import settings
+from paperloom.main import app
 
 
 def _make_pdf(num_pages: int = 2) -> bytes:

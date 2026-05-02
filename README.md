@@ -1,140 +1,82 @@
 # Paperloom
 
-> **Intelligence for your documents. Stays on your machine.**
+> **Local-first document toolkit. Agent-native. Your files never leave your machine.**
 
-**Paperloom** is a local-first web app that pairs a streaming OCR
-pipeline (GLM-OCR via [Ollama](https://ollama.ai)) with a chainable
-suite of PDF / Markdown / HTML / image tools. Your files never leave
-your computer — local AI by default, remote LLMs are an opt-in.
+**Paperloom** pairs a streaming OCR pipeline (GLM-OCR via [Ollama](https://ollama.ai)) with a chainable suite of PDF / Markdown / HTML / image tools and a built-in PII anonymizer. It ships three surfaces from the same code: a Python library, a CLI, and an MCP server — plus a Next.js web app on top.
 
 ---
 
-## Features
+## Why paperloom (vs. marker, docling, MinerU)
 
-- **Streaming OCR** — drop a scanned PDF or a phone photo, get
-  Markdown page-by-page as the model writes it.
-- **Document anonymizer** — built on
-  [OpenAI Privacy Filter](https://github.com/openai/privacy-filter)
-  (Apache 2.0). 8 entity categories, verbatim.
-- **Chain builder** — compose any of the 19 wired tools into a
-  pipeline. Reorder with `Alt+↑` / `Alt+↓`, remove with `Delete`.
-- **Image input for OCR** — JPEG/PNG/WebP/TIFF/BMP/GIF, with EXIF
-  auto-rotate and a one-click 90° rotate fallback in the preview.
-- **i18n** — English and Italian, with light/dark themes.
-- **Local-only** — all inference (OCR, anonymizer) runs on your
-  machine. No telemetry, no cloud round-trips.
+paperloom's edge is **agent orchestration with privacy primitives**, on top of a **state-of-the-art OCR model**:
+
+> **Model choice — GLM-OCR.** Scores **94.62 on OmniDocBench V1.5 (rank #1)** and is SOTA on formula / table recognition and information extraction. paperloom commits to **tracking the current SOTA** — when a stronger open model ships, the Ollama pin gets updated and the older one moves to an opt-in setting. We don't try to out-research [`marker`](https://github.com/datalab-to/marker), [`docling`](https://github.com/docling-project/docling), or [`MinerU`](https://github.com/opendatalab/mineru) on the model layer; we ride the best available model and focus on what's around it.
+
+The orchestration layer:
+
+| Capability | paperloom | marker | docling | MinerU | ocrmypdf |
+|---|---|---|---|---|---|
+| PDF/image → Markdown | ✅ (GLM-OCR) | ✅ (Surya + opt. LLM) | ✅ (VLM+OCR) | ✅ (VLM+OCR) | ❌ (PDF only) |
+| 19 chainable tools (split, merge, watermark, …) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Built-in PII redaction | ✅ (OPF) | ❌ | ❌ | ❌ | ❌ |
+| MCP server with security model | ✅ (allowlist + file_id) | ❌ | ❌ | ❌ | ❌ |
+| Streaming SSE (page-by-page) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Web UI included | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Python library + CLI | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Single model dependency | ✅ (one Ollama model) | ❌ (multi) | ❌ (multi) | ❌ (multi) | ✅ (Tesseract) |
+
+**Pick paperloom when:** you're building an agent workflow, you need PII redaction in the same pipeline as OCR, you prefer one Ollama model over a model zoo, or you want a web UI bundled.
+
+**Pick the others when:** raw OCR quality on complex layouts (math, tables, multi-column scientific PDFs) is the only thing that matters. Run our [benchmarks](./doc/benchmarks.md) on your own corpus before deciding.
+
+---
+
+## Hardware requirements
+
+paperloom runs the OCR model **locally**. RAM and unified-memory pressure is the bottleneck — not CPU clock.
+
+| Spec | Behavior |
+|---|---|
+| **Recommended** | Apple Silicon **M-series Pro** (M2 Pro / M3 Pro / M4 Pro / M5 Pro) with **≥ 24 GB unified RAM**, or x86 with a 24 GB+ GPU. Verified working on a Mac M5 Pro / 24 GB. |
+| **Minimum** | 16 GB unified RAM (Apple Silicon) or 16 GB GPU VRAM (NVIDIA). Expect single-page OCR to take 8–15 s and page-batches to stutter under memory pressure. |
+| **Below minimum** | **Don't.** On 8 GB / 16 GB intel Macs and low-end laptops the GLM-OCR model can saturate memory mid-page — observed symptoms include the OS freezing hard enough to require a reboot. The anonymizer (~4 GB checkpoint) compounds this. |
+
+If you can't meet the bar, two safe options:
+
+- Use **`pdf-to-text`** (no OCR — extracts the existing text layer) for digitally generated PDFs.
+- Run paperloom on a server / workstation and consume it remotely via the FastAPI HTTP surface or MCP over the network (not stdio).
+
+Disk: ~5 GB for the GLM-OCR model + ~4 GB for the OPF anonymizer checkpoint when first installed.
+
+## Three install paths
+
+| You want… | Run | Get |
+|---|---|---|
+| **Use as MCP server (Claude Desktop, Cursor, Cline, Agno)** | `uvx paperloom-mcp` | stdio MCP server with all 19 tools |
+| **Use as Python library / CLI in scripts** | `pip install paperloom` (or `uvx paperloom doctor`) | `from paperloom import ocr_to_markdown, ...` + `paperloom` CLI |
+| **Run the web app + dev** | `git clone … && pnpm install && pnpm dev` | Next.js UI on `localhost:3000`, FastAPI on `:8000` |
+
+All three share the same backend code. See [`doc/distribution.md`](doc/distribution.md) for full details.
+
+---
 
 ## Quick start
 
-```bash
-# 1. Pull the OCR model (~5 GB)
-ollama pull glm-ocr:latest
-
-# 2. Install JS + Python deps
-pnpm install:all
-
-# 3. Run the app
-pnpm dev
-```
-
-Open <http://localhost:3000>. That's it.
-
-> Backend health check: <http://localhost:8000/api/health>.
-
-## Usage
-
-Three entry points, picked from the home page:
-
-| Page                       | What it does                                       |
-| -------------------------- | -------------------------------------------------- |
-| `/tools/ocr-to-markdown`   | Drop a PDF or image. Stream Markdown side-by-side. |
-| `/tools`                   | Catalogue of every tool, with AI badges.           |
-| `/tools/chain`             | Compose tools into a pipeline. Multi-file inputs.  |
-
-### Example: scan + OCR + anonymize in one run
-
-1. Open `/tools/chain`.
-2. Upload one or more scanned PDFs.
-3. Add nodes: `pdf-to-images` → `ocr-to-markdown` → `anonymize`.
-4. Hit **Run**.
-5. Download `out.zip` — contains `out.md`, `images/`, and
-   `redactions.report.json`.
-
-### Catalogue deep-links
-
-Every tile on `/tools` deep-links to the chain builder with that tool
-pre-added: `/tools/chain?initial=<slug>`.
-
-## Installation
-
-### Requirements
-
-- **Node.js** 20+
-- **Python** 3.11+ with [`uv`](https://docs.astral.sh/uv/)
-- **Ollama** with `glm-ocr:latest` pulled
-- ~4 GB free disk for the OPF model checkpoint (downloaded on first
-  run to `~/.opf/privacy_filter`)
-
-### Anonymizer (opt-in)
-
-The `anonymize` tool depends on
-[OpenAI Privacy Filter](https://github.com/openai/privacy-filter).
-It is **not** installed by default — it brings in torch +
-transformers (~250 MB of Python deps) and downloads a model
-checkpoint (~4 GB) into `~/.opf/privacy_filter` on first use.
-
-When you add an `anonymize` node in `/tools/chain` without OPF
-installed, the UI shows an in-app banner explaining the trade-off
-and giving you the install command to copy. Or run it directly:
+### As an agent tool (MCP)
 
 ```bash
-pnpm install:opf
+ollama pull glm-ocr:latest      # one-time, ~5 GB
 ```
 
-That maps to `cd backend && uv sync --extra anonymizer`. Restart
-`pnpm dev` afterwards. Everything stays on your machine — no
-telemetry, no cloud round-trips. Once installed, subsequent runs
-are fully offline.
-
-### HTML / Markdown → PDF (optional)
-
-`html-to-pdf`, `markdown-to-pdf`, and `markdown-to-html` use
-[WeasyPrint](https://weasyprint.org/), which needs native libraries:
-
-```bash
-# macOS
-brew install pango
-```
-
-Without these, the three converters still appear but emit
-`weasyprint_unavailable`. `pdf-to-html` does **not** need them.
-
-### MCP server (use paperloom from Claude Desktop / Claude Code)
-
-Paperloom ships an [MCP](https://modelcontextprotocol.io) server that
-exposes every tool to local LLM clients. The server speaks `stdio`, so
-nothing is exposed on the network.
-
-```bash
-pnpm mcp
-# or, from backend/:
-uv run python -m src.mcp_server
-```
-
-#### Wire into Claude Desktop
-
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`
-(macOS) or the Windows / Linux equivalent:
+Wire `uvx paperloom-mcp` into your MCP client. For Claude Desktop, edit
+`~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "paperloom": {
-      "command": "uv",
-      "args": [
-        "--directory", "/absolute/path/to/paperloom/backend",
-        "run", "python", "-m", "src.mcp_server"
-      ],
+      "command": "uvx",
+      "args": ["paperloom-mcp"],
       "env": {
         "PAPERLOOM_MCP_ALLOWED_DIRS": "/Users/you/Documents,/Users/you/Downloads"
       }
@@ -143,46 +85,94 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`
 }
 ```
 
-Restart Claude Desktop. You should see `paperloom` listed under tools.
+Restart Claude Desktop. Done.
 
-#### What the LLM can do
-
-- `register_file(path)` / `register_inline(filename, base64)` — bring a
-  file into paperloom, get a `file_id` back.
-- `ocr_to_markdown`, `anonymize`, `pdf_to_text`, `pdf_to_images`,
-  `extract_pages`, `merge_pdfs`, `add_watermark`, … — one tool per
-  paperloom slug, with typed params.
-- `run_tool(slug, file_ids, params)` — generic dispatcher for slugs
-  without a dedicated wrapper.
-- `list_paperloom_tools()` — discover slugs and their param hints.
-
-#### Security
-
-- **Path allowlist.** `register_file` only accepts paths under the dirs
-  in `PAPERLOOM_MCP_ALLOWED_DIRS` (default: `~/Documents`, `~/Downloads`,
-  `~/Desktop`). Symlinks are resolved before the check, so a symlink
-  inside an allowed dir pointing outside is rejected.
-- **No raw paths in tool args.** All processing goes through `file_id`
-  tokens validated as 32-char hex. The LLM cannot ask paperloom to
-  operate on `/etc/passwd` or `~/.ssh/id_rsa` — even if a malicious
-  document tries to inject that instruction.
-- **stdio only.** No HTTP listener, no auth needed: the same trust
-  boundary as the user that launched Claude Desktop.
-- **Same size limits as the web upload.** `max_file_size_mb` (50) and
-  `max_pdf_pages` (200) apply.
-
-### Docker (alternative)
-
-Containerises only `web` and `backend` — Ollama stays native on the
-host so it can use your GPU.
+### As a Claude Code plugin
 
 ```bash
-ollama serve   # native, on the host
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+/plugin marketplace add luciopalmieri/paperloom
+/plugin install paperloom
 ```
 
-Containers reach Ollama via `host.docker.internal:11434`. See
-[`doc/phase-0.md`](doc/phase-0.md) §9.
+Bundles the MCP server config + `/paperloom-ocr`, `/paperloom-anonymize`, `/paperloom-doctor` slash commands + skills the model can match against.
+
+### As a Python library
+
+```bash
+pip install paperloom            # core (OCR, PDF tools, MCP server)
+pip install 'paperloom[pdf]'     # + WeasyPrint for markdown→pdf, html→pdf
+pip install 'paperloom[anonymizer]'  # + OPF for PII redaction
+pip install 'paperloom[all]'     # everything
+```
+
+```python
+from paperloom import ocr_to_markdown, anonymize, Chain
+
+md = ocr_to_markdown("scan.pdf")
+clean = anonymize(md, preset="balanced")
+
+# Or compose:
+result = Chain([
+    ("pdf-to-images", {"dpi": 200}),
+    ("ocr-to-markdown", {}),
+    ("anonymize", {"preset": "recall"}),
+]).run(["doc.pdf"])
+```
+
+`anonymizer` extra downloads ~4 GB on first use. The `pdf` extra needs `brew install pango` (macOS) or equivalent.
+
+### As a CLI
+
+```bash
+paperloom ocr scan.pdf -o out.md
+paperloom anonymize out.md --preset recall
+paperloom chain --steps pdf-to-images,ocr-to-markdown,anonymize doc.pdf
+paperloom doctor      # check Ollama, glm-ocr, allowlist, extras
+```
+
+### As the full web app (dev mode)
+
+```bash
+ollama pull glm-ocr:latest
+pnpm install:all
+pnpm dev
+```
+
+Open <http://localhost:3000>. Backend health check at <http://localhost:8000/api/health>.
+
+---
+
+## Features
+
+- **Streaming OCR** — drop a scanned PDF or phone photo, watch Markdown emit page by page over SSE.
+- **PII anonymizer** — built on [OpenAI Privacy Filter](https://github.com/openai/privacy-filter) (Apache 2.0). 8 entity categories, verbatim. **Auto-installs on first use.**
+- **Chain builder** (web UI) — compose any of the 19 wired tools. Reorder with `Alt+↑` / `Alt+↓`, remove with `Delete`.
+- **Image input for OCR** — JPEG / PNG / WebP / TIFF / BMP / GIF, with EXIF auto-rotate.
+- **i18n** — English + Italian, light + dark.
+- **Local-only** — no telemetry, no cloud round-trips. Even the anonymizer model runs on CPU by default.
+
+---
+
+## Tools available over MCP and library
+
+OCR: `ocr-to-markdown`, `pdf-to-text`, `pdf-to-images`, `images-to-pdf`
+Anonymize: `anonymize`
+Page ops: `extract-pages`, `delete-pages`, `rotate-pages`, `reorder-pages`, `split-pdf`, `merge-pdfs`
+Render: `markdown-to-html`, `markdown-to-pdf`, `html-to-pdf`, `pdf-to-html`
+Quality: `compress-pdf`, `strip-metadata`, `add-page-numbers`, `add-watermark`
+
+---
+
+## MCP security model
+
+The MCP server is the most exposed surface, so it's locked down:
+
+- **Path allowlist.** `register_file` only accepts paths under `PAPERLOOM_MCP_ALLOWED_DIRS` (default: `~/Documents`, `~/Downloads`, `~/Desktop`). Symlinks resolved before the check — a symlink under an allowed dir pointing outside is rejected.
+- **No raw paths in tool args.** All processing goes through opaque `file_id` tokens validated as 32-char hex. The LLM cannot ask paperloom to operate on `/etc/passwd` or `~/.ssh/id_rsa`, even if a malicious document tries to inject that instruction.
+- **stdio only.** No HTTP listener, no auth needed: same trust boundary as the user that launched the MCP client.
+- **Same size limits as the web upload.** `max_file_size_mb` (50) and `max_pdf_pages` (200).
+
+---
 
 ## Architecture
 
@@ -200,14 +190,13 @@ Containers reach Ollama via `host.docker.internal:11434`. See
                        └────────────────┘
 ```
 
-- **Frontend** — Next.js 16 App Router, TypeScript, shadcn/ui,
-  Tailwind v4, `next-intl`, `next-themes`.
-- **Backend** — FastAPI on Python 3.11+, `uv` for deps, SSE streams
-  for OCR + chain progress.
-- **Models** — Ollama (`glm-ocr:latest`) + OpenAI Privacy Filter
-  (CPU by default).
+- **Frontend** — Next.js 16 App Router, TypeScript, shadcn/ui, Tailwind v4, `next-intl`, `next-themes`.
+- **Backend** — FastAPI on Python 3.11+, `uv` for deps, SSE streams for OCR + chain progress.
+- **Models** — Ollama (`glm-ocr:latest`) + OpenAI Privacy Filter (CPU by default).
 
 Full design: [`doc/prompt/architecture.md`](doc/prompt/architecture.md).
+
+---
 
 ## Development
 
@@ -218,28 +207,19 @@ pnpm build:web       # production web build
 pnpm test:api        # backend pytest
 ```
 
-The repo is a pnpm workspace: the web app lives in
-`web/`, the FastAPI backend in `backend/`, and shared docs in `doc/`.
+The repo is a pnpm workspace: web app in `web/`, FastAPI backend (and the Python library) in `backend/`, shared docs in `doc/`.
+
+---
 
 ## Documentation
 
-- [`doc/phase-0.md`](doc/phase-0.md) — execution plan, file tree,
-  pipeline contracts, Docker spec.
-- [`doc/prompt/PROMPT.md`](doc/prompt/PROMPT.md) — project brief,
-  scope, conversation contract.
-- [`doc/prompt/architecture.md`](doc/prompt/architecture.md) —
-  inter-process contract.
-- [`doc/prompt/shadcn-rules.md`](doc/prompt/shadcn-rules.md) — UI
-  conventions.
-- [`doc/prompt/i18n-rules.md`](doc/prompt/i18n-rules.md) — IT/EN
-  conventions.
-- [`doc/prompt/a11y-rules.md`](doc/prompt/a11y-rules.md) —
-  accessibility (WCAG 2.2 AA).
-- [`doc/prompt/anonymizer-rules.md`](doc/prompt/anonymizer-rules.md) —
-  OPF integration rules.
+- [`doc/distribution.md`](doc/distribution.md) — install paths and packaging strategy.
+- [`doc/cookbook/`](doc/cookbook/) — copy-paste recipes (RAG ingest, redact medical records, batch invoice merge, Agno integration).
+- [`doc/benchmarks.md`](doc/benchmarks.md) — paperloom vs. marker vs. docling on a fixed corpus.
+- [`doc/phase-0.md`](doc/phase-0.md) — execution plan, file tree, pipeline contracts, Docker spec.
+- [`doc/prompt/architecture.md`](doc/prompt/architecture.md) — inter-process contract.
+- [`doc/prompt/anonymizer-rules.md`](doc/prompt/anonymizer-rules.md) — OPF integration rules.
 
 ## License
 
-[MIT](LICENSE). Depends on
-[OpenAI Privacy Filter](https://github.com/openai/privacy-filter)
-(Apache 2.0).
+[MIT](LICENSE). Optional dependency on [OpenAI Privacy Filter](https://github.com/openai/privacy-filter) (Apache 2.0) when the anonymizer extra is installed.

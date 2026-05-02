@@ -325,7 +325,7 @@ For each input file, in order:
 
 ### 4.3 Single fixed prompt
 
-Locked in `backend/src/ocr/prompts.py` as one string constant. Draft (final wording finalised at Phase 3 start, but shape locked here):
+Locked in `backend/paperloom/ocr/prompts.py` as one string constant. Draft (final wording finalised at Phase 3 start, but shape locked here):
 
 ```
 You are an OCR engine. Convert the given page image into clean Markdown.
@@ -582,9 +582,9 @@ volumes:
 # docker-compose.dev.yml (overlay — `docker compose -f docker-compose.yml -f docker-compose.dev.yml up`)
 services:
   backend:
-    command: ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    command: ["uv", "run", "uvicorn", "paperloom.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
-      - ./backend/src:/app/src
+      - ./backend/paperloom:/app/paperloom
       - ./backend/tests:/app/tests
   web:
     command: ["npm", "run", "dev"]

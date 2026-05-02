@@ -1,0 +1,16 @@
+{
+  "name": "paperloom",
+  "version": "0.1.0",
+  "description": "Local-first document toolkit. Streaming OCR (GLM-OCR via Ollama), PII anonymizer, and 19 chainable PDF/Markdown/HTML tools. All inference on your machine.",
+  "homepage": "https://github.com/luciopalmieri/paperloom",
+  "license": "MIT",
+  "mcpServers": {
+    "paperloom": {
+      "command": "uvx",
+      "args": ["paperloom-mcp"],
+      "env": {
+        "PAPERLOOM_MCP_ALLOWED_DIRS": "${HOME}/Documents,${HOME}/Downloads,${HOME}/Desktop"
+      }
+    }
+  }
+}
