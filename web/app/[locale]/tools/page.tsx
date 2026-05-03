@@ -5,6 +5,7 @@ import {
   type CatalogueSection,
 } from "@/components/catalogue/catalogue-grid";
 import { backendUrl } from "@/lib/api";
+import { isLandingMode } from "@/lib/landing";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -85,6 +86,7 @@ async function fetchOpfStatus(): Promise<boolean | null> {
 export default async function ToolsCataloguePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
+  if (isLandingMode) return null;
   const tCat = await getTranslations("tools.catalogue");
   const tNames = await getTranslations("tools.names");
 

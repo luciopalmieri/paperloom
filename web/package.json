@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:landing": "LANDING_MODE=1 LANDING_BASE_PATH=${LANDING_BASE_PATH:-/paperloom} next build && node scripts/landing-redirect.mjs",
     "start": "next start",
     "lint": "eslint ."
   },
