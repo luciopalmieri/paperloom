@@ -4,7 +4,8 @@ from collections.abc import AsyncIterator
 from pathlib import Path
 from typing import Any, Literal
 
-from paperloom.ocr import figures, images, ollama, render, stub
+from paperloom.ocr import figures, images, render
+from paperloom.ocr.backends import BackendError, get_backend
 from paperloom.ocr.prompts import OCR_PROMPT
 
 
@@ -44,6 +45,24 @@ async def run_real(
         page_iter = list(range(1, total_pages + 1))
     page_buffers: dict[int, str] = {}
 
+    backend = get_backend()
+
+    # Batch path: cloud backends (Mistral) can process the whole PDF in one
+    # call. We pre-fetch the markdown then re-emit page-by-page so downstream
+    # figure/image handling stays unchanged. Image inputs cannot batch.
+    batch_results: dict[int, str] | None = None
+    if backend.batch_supported and not is_img:
+        try:
+            batch_results = await backend.process_pdf_batch(pdf_path, page_iter)
+        except BackendError as exc:
+            yield "error", {
+                "job_id": job_id,
+                "code": f"{backend.provider_name}_failed",
+                "message": str(exc),
+                "recoverable": False,
+            }
+            return
+
     processed = 0
     total_to_process = len(page_iter)
     for page in page_iter:
@@ -57,8 +76,9 @@ async def run_real(
             images.load_as_png(pdf_path) if is_img else render.render_page_png(pdf_path, page - 1)
         )
         buf: list[str] = []
-        try:
-            async for chunk in ollama.stream_generate(page_png, OCR_PROMPT):
+        if batch_results is not None:
+            chunk = batch_results.get(page, "")
+            if chunk:
                 buf.append(chunk)
                 yield "ocr.page", {
                     "job_id": job_id,
@@ -66,14 +86,24 @@ async def run_real(
                     "markdown_chunk": chunk,
                     "page_done": False,
                 }
-        except ollama.OllamaError as exc:
-            yield "error", {
-                "job_id": job_id,
-                "code": "ollama_failed",
-                "message": str(exc),
-                "recoverable": False,
-            }
-            return
+        else:
+            try:
+                async for chunk in backend.stream_page(page_png, OCR_PROMPT):
+                    buf.append(chunk)
+                    yield "ocr.page", {
+                        "job_id": job_id,
+                        "page": page,
+                        "markdown_chunk": chunk,
+                        "page_done": False,
+                    }
+            except BackendError as exc:
+                yield "error", {
+                    "job_id": job_id,
+                    "code": f"{backend.provider_name}_failed",
+                    "message": str(exc),
+                    "recoverable": False,
+                }
+                return
 
         page_md_raw = "".join(buf)
         page_md_final, figs_saved, figs_total = _finalize_page_markdown(
@@ -180,32 +210,3 @@ def _finalize_page_markdown(
     return final_md, figures_saved, figures_total
 
 
-async def run_stub(
-    job_id: str, pdf_path: Path
-) -> AsyncIterator[tuple[str, dict[str, Any]]]:
-    """Phase 2 stub kept for offline development."""
-    pages = render.page_count(pdf_path)
-    yield "node.start", {"job_id": job_id, "tool": "ocr-to-markdown", "pages": pages}
-
-    for page in range(1, pages + 1):
-        yield "progress", {
-            "job_id": job_id,
-            "tool": "ocr-to-markdown",
-            "page": page,
-            "percent": int(((page - 1) / pages) * 100),
-        }
-        async for chunk in stub.stream_page(page):
-            yield "ocr.page", {
-                "job_id": job_id,
-                "page": page,
-                "markdown_chunk": chunk,
-                "page_done": False,
-            }
-        yield "ocr.page", {
-            "job_id": job_id,
-            "page": page,
-            "markdown_chunk": "",
-            "page_done": True,
-        }
-
-    yield "done", {"job_id": job_id, "artifacts": []}

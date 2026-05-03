@@ -10,8 +10,21 @@ def _default_storage_root() -> str:
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # OCR provider selection. "ollama" (default, local) or "mistral" (cloud,
+    # requires paperloom[mistral] + MISTRAL_API_KEY). Other providers may
+    # land later — see paperloom.ocr.backends.available_providers().
+    ocr_provider: str = "ollama"
+
     ollama_url: str = "http://localhost:11434"
     ollama_model: str = "glm-ocr:latest"
+
+    # Mistral cloud OCR — only consulted when ocr_provider == "mistral".
+    # mode is "batch" (one API call per PDF, cheaper, no streaming) or
+    # "per_page" (one call per rendered page, costlier, streaming).
+    mistral_api_key: str = ""
+    mistral_ocr_model: str = "mistral-ocr-latest"
+    mistral_ocr_mode: str = "batch"
+    mistral_api_base: str = "https://api.mistral.ai"
 
     opf_device: str = "cpu"
 

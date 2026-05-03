@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 from paperloom.config import settings
 from paperloom.main import app
-from paperloom.ocr import ollama
+from paperloom.ocr.backends.base import OCRBackend
 
 
 def _make_pdf(num_pages: int = 2) -> bytes:
@@ -22,14 +22,26 @@ def _make_pdf(num_pages: int = 2) -> bytes:
         pdf.close()
 
 
-async def _fake_ollama(_image_png: bytes, _prompt: str) -> AsyncIterator[str]:
-    yield "# Stub Heading\n\n"
-    yield "Lorem ipsum.\n"
+class _FakeBackend(OCRBackend):
+    provider_name = "fake"
+    is_local = True
+    batch_supported = False
+
+    async def stream_page(self, image_png: bytes, prompt: str) -> AsyncIterator[str]:
+        yield "# Stub Heading\n\n"
+        yield "Lorem ipsum.\n"
+
+
+def _patch_backend(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "paperloom.ocr.pipeline.get_backend",
+        lambda name=None: _FakeBackend(),
+    )
 
 
 def test_ocr_streams_chunks_and_emits_zip(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "job_storage_root", str(tmp_path))
-    monkeypatch.setattr(ollama, "stream_generate", _fake_ollama)
+    _patch_backend(monkeypatch)
 
     client = TestClient(app)
 
@@ -79,7 +91,7 @@ def test_artifact_traversal_in_name_blocked(tmp_path, monkeypatch):
 
 def test_ocr_pages_param_processes_subset(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "job_storage_root", str(tmp_path))
-    monkeypatch.setattr(ollama, "stream_generate", _fake_ollama)
+    _patch_backend(monkeypatch)
 
     client = TestClient(app)
 

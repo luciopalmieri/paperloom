@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl";
 
 import { LocaleSwitch } from "@/components/i18n/locale-switch";
 import { Breadcrumbs } from "@/components/shell/breadcrumbs";
+import { PrivacyBadge } from "@/components/shell/privacy-badge";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Link } from "@/i18n/navigation";
 
@@ -21,6 +22,7 @@ export function AppHeader() {
         </span>
         <Breadcrumbs />
         <div className="ml-auto flex items-center gap-2">
+          <PrivacyBadge />
           <LocaleSwitch />
           <ThemeToggle />
         </div>

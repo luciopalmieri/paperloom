@@ -48,7 +48,9 @@ dependencies = [
 pdf = ["weasyprint>=68.1"]
 # OPF anonymizer — torch + transformers + ~4 GB checkpoint. Opt-in.
 anonymizer = ["opf"]
-# All extras (web UI / dev convenience).
+# All extras (web UI / dev convenience). Note: cloud OCR providers
+# (Mistral, OpenAI, Anthropic) use raw httpx and do not need extras —
+# they only require the matching API key in env (e.g. MISTRAL_API_KEY).
 all = ["weasyprint>=68.1", "opf"]
 
 [project.scripts]

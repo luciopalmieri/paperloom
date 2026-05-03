@@ -1,9 +1,12 @@
 import importlib.util
+from typing import Any
 
 import httpx
 from fastapi import APIRouter
 
+from paperloom._api import __version__
 from paperloom.config import settings
+from paperloom.privacy import current_state
 
 router = APIRouter(prefix="/api", tags=["health"])
 
@@ -26,4 +29,16 @@ async def health() -> dict[str, bool]:
     return {
         "ollama": await _ollama_up(),
         "opf": _opf_installed(),
+    }
+
+
+@router.get("/status")
+async def status() -> dict[str, Any]:
+    """Runtime status: version, privacy mode, components, caveats.
+
+    The web UI badge polls this. Cheap — never touches the network.
+    """
+    return {
+        "version": __version__,
+        "privacy": current_state(),
     }

@@ -212,6 +212,26 @@ async def list_paperloom_tools() -> dict[str, Any]:
     return {"tools": tool_registry.list_tools(), "params_hints": _PARAM_HINTS}
 
 
+@mcp.tool()
+async def paperloom_status() -> dict[str, Any]:
+    """Runtime privacy / component status of this paperloom instance.
+
+    Returns mode (`local`/`hybrid`/`cloud`) computed across paperloom's own
+    components (OCR backend, anonymizer). Always includes a caveat
+    reminding that tool I/O traverses the calling MCP client's LLM
+    provider — paperloom cannot see what happens upstream of itself.
+
+    Surface this to the user when:
+      - they ask "are we local?" / "is this private?";
+      - the user is about to ingest sensitive material;
+      - any cloud component is active (caveats list will say so).
+    """
+    from paperloom._api import __version__
+    from paperloom.privacy import current_state
+
+    return {"version": __version__, "privacy": current_state()}
+
+
 _PARAM_HINTS: dict[str, dict[str, str]] = {
     "ocr-to-markdown": {
         "pages": "comma list e.g. '1,3-5' (optional, default all)",
@@ -443,6 +463,15 @@ async def reorder_pages(file_id: str, order: list[int]) -> dict[str, Any]:
 
 def main() -> None:
     """Run the MCP server over stdio (default for Claude Desktop, etc.)."""
+    import sys
+
+    from paperloom._api import __version__
+    from paperloom.privacy import current_state, short_summary
+
+    state = current_state()
+    print(f"paperloom-mcp {__version__} — {short_summary()}", file=sys.stderr, flush=True)
+    for caveat in state["caveats"]:
+        print(f"  caveat: {caveat}", file=sys.stderr, flush=True)
     mcp.run(transport="stdio")
 
 

@@ -155,7 +155,19 @@ def _check_allowlist() -> tuple[bool, str]:
 
 
 def _cmd_doctor(_: argparse.Namespace) -> int:
+    from paperloom.privacy import current_state
+
     print(f"paperloom {__version__} — environment check\n")
+
+    state = current_state()
+    print(f"  Privacy mode: {state['mode'].upper()}")
+    for c in state["components"]:
+        flag = "local" if c["is_local"] else "CLOUD"
+        print(f"    - {c['name']}: {c['provider']} [{flag}] — {c['detail']}")
+    for caveat in state["caveats"]:
+        print(f"    ! {caveat}")
+    print()
+
     checks = [
         ("Ollama + glm-ocr", _check_ollama()),
         ("MCP allowlist", _check_allowlist()),
@@ -163,10 +175,13 @@ def _cmd_doctor(_: argparse.Namespace) -> int:
         ("WeasyPrint (pdf)", _check_weasyprint()),
     ]
     fail = 0
+    ocr_provider = (current_state()["components"][0] or {}).get("provider", "ollama")
     for name, (ok, msg) in checks:
         flag = "OK  " if ok else "FAIL"
         print(f"  [{flag}] {name}: {msg}")
-        if not ok and name == "Ollama + glm-ocr":
+        # Only count Ollama as a hard requirement when Ollama is the
+        # selected OCR provider. Cloud-OCR users don't need it running.
+        if not ok and name == "Ollama + glm-ocr" and ocr_provider == "ollama":
             fail += 1
     print()
     print(
@@ -179,6 +194,25 @@ def _cmd_doctor(_: argparse.Namespace) -> int:
         print("FAIL — some hard requirements missing. Fix the items above.")
         return 1
     print("OK — paperloom ready.")
+    return 0
+
+
+def _cmd_status(args: argparse.Namespace) -> int:
+    import json as _json
+
+    from paperloom.privacy import current_state
+
+    state = current_state()
+    if args.json:
+        print(_json.dumps({"version": __version__, "privacy": state}, indent=2))
+        return 0
+    print(f"paperloom {__version__} — privacy mode: {state['mode'].upper()}")
+    for c in state["components"]:
+        flag = "local" if c["is_local"] else "CLOUD"
+        print(f"  - {c['name']}: {c['provider']} [{flag}] — {c['detail']}")
+    print()
+    for caveat in state["caveats"]:
+        print(f"  ! {caveat}")
     return 0
 
 
@@ -218,6 +252,13 @@ def main(argv: list[str] | None = None) -> int:
 
     p_doctor = sub.add_parser("doctor", help="Check Ollama, allowlist, and optional extras")
     p_doctor.set_defaults(func=_cmd_doctor)
+
+    p_status = sub.add_parser(
+        "status",
+        help="Show privacy mode + active components (machine-readable with --json)",
+    )
+    p_status.add_argument("--json", action="store_true")
+    p_status.set_defaults(func=_cmd_status)
 
     p_version = sub.add_parser("version", help="Print version and exit")
     p_version.set_defaults(func=_cmd_version)

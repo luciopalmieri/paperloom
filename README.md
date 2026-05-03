@@ -29,6 +29,8 @@ The orchestration layer:
 
 **Pick the others when:** raw OCR quality on complex layouts (math, tables, multi-column scientific PDFs) is the only thing that matters. Run our [benchmarks](./doc/benchmarks.md) on your own corpus before deciding.
 
+> **Local-first, with cloud opt-in.** OCR runs on Ollama by default (everything on your machine). Need a cloud OCR provider? Set `OCR_PROVIDER=mistral` for Mistral Document AI — paperloom flips to "hybrid" privacy mode and the web UI badge turns amber so you always see when bytes leave your box. The MCP server prints the same banner on stderr at startup. Full breakdown in [`doc/privacy.md`](doc/privacy.md).
+
 ---
 
 ## Hardware requirements
@@ -215,8 +217,19 @@ The repo is a pnpm workspace: web app in `web/`, FastAPI backend (and the Python
 
 - [`doc/architecture.md`](doc/architecture.md) — inter-process contract.
 - [`doc/distribution.md`](doc/distribution.md) — install paths and packaging strategy.
-- [`doc/cookbook/`](doc/cookbook/) — copy-paste recipes (RAG ingest, redact medical records, batch invoice merge, Agno integration).
+- [`doc/privacy.md`](doc/privacy.md) — four-layer privacy model and runtime mode.
+- [`doc/cookbook/`](doc/cookbook/) — copy-paste recipes:
+  [LLM Wiki](doc/cookbook/01-llm-wiki-ingest.md),
+  [RAG ingest](doc/cookbook/02-rag-ingest.md),
+  [Agno](doc/cookbook/03-agno-agent.md),
+  [Claude Desktop](doc/cookbook/04-claude-desktop.md),
+  [scan→clean PDF](doc/cookbook/05-scan-clean-pdf.md),
+  [merge invoices](doc/cookbook/06-batch-merge-invoices.md),
+  [redact medical notes](doc/cookbook/07-redact-medical.md),
+  [LangChain tool](doc/cookbook/08-langchain-tool.md),
+  [remote Agno + cloud OCR](doc/cookbook/09-remote-agno-cloud-ocr.md).
 - [`doc/benchmarks.md`](doc/benchmarks.md) — paperloom vs. marker vs. docling on a fixed corpus.
+- [`doc/roadmap.md`](doc/roadmap.md) — planned work (more OCR providers, audit log, MCP resources/prompts).
 - [`doc/rules/`](doc/rules/) — coding/UI conventions:
   [`anonymizer`](doc/rules/anonymizer.md),
   [`a11y`](doc/rules/a11y.md),
