@@ -2,6 +2,8 @@
 
 > **Copy the block below as the first message in a new Claude Code session.** It's self-contained: paths, branch, what's verified, what's left, and the rules of engagement.
 
+> **CLEANUP — DELETE THIS FILE WHEN DONE.** It was committed by mistake; the resume session must `git rm doc/handoff-tier2.md` and commit that as its final step before tagging the release.
+
 ---
 
 ## Prompt to paste
@@ -64,6 +66,15 @@ Start by:
 1. Reading doc/release-checklist.md to confirm Tier 2 line items.
 2. Reading the last 5 commit messages on the branch (`git log --oneline -10`).
 3. Asking the user which Tier 2 step they want to start with — 2.6 (Claude Desktop) is the highest signal because it's the primary use case.
+
+## Final cleanup (must do before tagging the release)
+
+doc/handoff-tier2.md was committed by mistake. As the final step of the publish flow — after Tier 4 has shipped the wheel — delete it:
+
+    git rm doc/handoff-tier2.md
+    git commit -m "chore: drop transient release handoff doc"
+
+Do NOT leave it in main. Do NOT include it in the published wheel (it isn't, since the wheel only ships `paperloom/`, but the repo would still carry it).
 ```
 
 ---
