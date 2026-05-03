@@ -137,6 +137,11 @@ async def run(
                 "job_id": job_id,
                 "category": span.category,
                 "count": 1,
+                # Offsets help dual-view UIs highlight the original text.
+                # Plaintext is intentionally omitted: privacy report stores a
+                # SHA-256 digest, not the raw value.
+                "offset_start": span.start,
+                "offset_end": span.end,
             }
 
         yield "node.progress", {

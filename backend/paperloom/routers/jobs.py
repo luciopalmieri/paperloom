@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, HTTPException
@@ -81,13 +82,21 @@ async def artifact(job_id: str, name: str) -> FileResponse:
     job_root = jobs_mod.find_job_root(job_id)
     if job_root is None:
         raise HTTPException(status_code=404, detail={"code": "job_not_found"})
-    path = job_root / name
-    try:
-        path = jobs_mod.safe_under(path, job_root)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=400, detail={"code": "bad_artifact_name"}
-        ) from exc
-    if not path.is_file():
+    # Two valid roots: `out.zip` lives directly under <jobid>/, every other
+    # named artifact lives under <jobid>/out/. Try job_root first
+    # (preserves out.zip behaviour), fall back to out/.
+    candidates = [job_root / name, job_root / "out" / name]
+    chosen: Path | None = None
+    for cand in candidates:
+        try:
+            resolved = jobs_mod.safe_under(cand, job_root)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400, detail={"code": "bad_artifact_name"}
+            ) from exc
+        if resolved.is_file():
+            chosen = resolved
+            break
+    if chosen is None:
         raise HTTPException(status_code=404, detail={"code": "artifact_not_found"})
-    return FileResponse(path, filename=name)
+    return FileResponse(chosen, filename=name)

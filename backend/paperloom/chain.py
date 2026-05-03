@@ -64,13 +64,25 @@ async def run(
     zip_path = job_root / "out.zip"
     build_zip(out_root, zip_path)
 
-    yield "done", {
-        "job_id": job_id,
-        "artifacts": [
+    artifacts: list[dict[str, Any]] = [
+        {
+            "name": "out.zip",
+            "size": zip_path.stat().st_size,
+            "url": f"/api/jobs/{job_id}/artifacts/out.zip",
+        }
+    ]
+    # Expose every concrete output alongside the zip so single-tool
+    # consumers (anonymize tool's redacted .md, OCR tool's out.md, etc.)
+    # don't have to download and unzip just to display one file.
+    for f in sorted(out_root.iterdir()):
+        if not f.is_file():
+            continue
+        artifacts.append(
             {
-                "name": "out.zip",
-                "size": zip_path.stat().st_size,
-                "url": f"/api/jobs/{job_id}/artifacts/out.zip",
+                "name": f.name,
+                "size": f.stat().st_size,
+                "url": f"/api/jobs/{job_id}/artifacts/{f.name}",
             }
-        ],
-    }
+        )
+
+    yield "done", {"job_id": job_id, "artifacts": artifacts}
