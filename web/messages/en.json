@@ -75,7 +75,9 @@
       "repo": "GitHub",
       "license": "MIT license",
       "docs": "Documentation",
-      "version": "v0.1"
+      "version": "v0.1",
+      "disclaimer": "Disclaimer",
+      "disclaimer-text": "Provided as-is, no warranty. OCR output may contain errors; PII anonymization is statistical, not guaranteed. Privacy depends on your configuration — see the badge in the header. Verify results before relying on them."
     },
     "landing-tools-banner": {
       "eyebrow": "Static preview",

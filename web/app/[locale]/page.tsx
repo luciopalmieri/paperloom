@@ -5,7 +5,7 @@ import { HealthPill } from "@/components/home/health-pill";
 import { InstallSnippet } from "@/components/home/install-snippet";
 import { WovenMark } from "@/components/home/woven-mark";
 import { Link } from "@/i18n/navigation";
-import { DOCS_URL, LICENSE_URL, REPO_URL, isLandingMode } from "@/lib/landing";
+import { DISCLAIMER_URL, DOCS_URL, LICENSE_URL, REPO_URL, isLandingMode } from "@/lib/landing";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -251,7 +251,18 @@ function Home() {
           >
             {t("footer.docs")} ↗
           </a>
+          <a
+            href={DISCLAIMER_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-foreground focus-visible:ring-ring underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+          >
+            {t("footer.disclaimer")} ↗
+          </a>
         </div>
+        <p className="text-muted-foreground/80 mt-3 max-w-3xl text-xs leading-relaxed">
+          {t("footer.disclaimer-text")}
+        </p>
       </footer>
     </main>
   );

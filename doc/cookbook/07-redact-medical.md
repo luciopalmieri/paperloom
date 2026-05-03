@@ -1,5 +1,7 @@
 # Redact PII from a folder of Markdown notes
 
+> **⚠ Use with care for sensitive data.** PII anonymization is statistical, not guaranteed. OPF catches most names, emails, phone numbers, IDs — but it can miss entities, especially in non-English text or unusual formats. Re-read every redacted file before sharing it. paperloom is **not a substitute for a compliance review** (HIPAA, GDPR, etc.). See the [Disclaimer](../../README.md#disclaimer) for the full caveat.
+
 Run OPF over every `.md` under `./notes/`. Output goes to `./redacted/`. **First call auto-installs OPF** (~250 MB Python deps + ~4 GB checkpoint). Subsequent calls are fast.
 
 ```python

@@ -4,7 +4,7 @@
 
 `paperloom` is the Python library and MCP server behind [paperloom](https://github.com/luciopalmieri/paperloom) — a local-first web app for OCR, PDF/Markdown/HTML transforms, and PII redaction. Every tool runs on your machine. No cloud round-trips, no telemetry.
 
-## Why paperloom (vs. marker, docling, MinerU)
+## Why paperloom
 
 paperloom rides a **state-of-the-art OCR model** — GLM-OCR scores **94.62 on OmniDocBench V1.5 (rank #1)** and is SOTA on formula / table recognition and information extraction. paperloom commits to **tracking the current SOTA**: when a stronger open model ships, the Ollama pin gets updated.
 
@@ -15,6 +15,8 @@ paperloom's value-add is **agent orchestration around the model**:
 - **Built-in PII redaction** — OPF model, 8 entity categories, verbatim.
 - **Streaming SSE** — Markdown emits page-by-page as the OCR model writes it.
 - **One Ollama dep** — reuses any GLM-OCR model you already pulled. No multi-GB model zoo download.
+
+For raw model quality on dense scientific PDFs, [`marker`](https://github.com/datalab-to/marker), [`docling`](https://github.com/docling-project/docling), and [`MinerU`](https://github.com/opendatalab/mineru) are excellent companion projects — paperloom doesn't try to out-research them, it focuses on the orchestration and privacy layer around the model.
 
 ## Install
 

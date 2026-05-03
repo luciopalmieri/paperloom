@@ -75,7 +75,9 @@
       "repo": "GitHub",
       "license": "Licenza MIT",
       "docs": "Documentazione",
-      "version": "v0.1"
+      "version": "v0.1",
+      "disclaimer": "Disclaimer",
+      "disclaimer-text": "Fornito così com'è, nessuna garanzia. L'output OCR può contenere errori; l'anonimizzazione PII è statistica, non garantita. La privacy dipende dalla configurazione — guarda il badge in header. Verifica i risultati prima di fare affidamento."
     },
     "landing-tools-banner": {
       "eyebrow": "Anteprima statica",

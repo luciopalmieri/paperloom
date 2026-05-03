@@ -6,28 +6,22 @@
 
 ---
 
-## Why paperloom (vs. marker, docling, MinerU)
+## Why paperloom
 
 paperloom's edge is **agent orchestration with privacy primitives**, on top of a **state-of-the-art OCR model**:
 
-> **Model choice — GLM-OCR.** Scores **94.62 on OmniDocBench V1.5 (rank #1)** and is SOTA on formula / table recognition and information extraction. paperloom commits to **tracking the current SOTA** — when a stronger open model ships, the Ollama pin gets updated and the older one moves to an opt-in setting. We don't try to out-research [`marker`](https://github.com/datalab-to/marker), [`docling`](https://github.com/docling-project/docling), or [`MinerU`](https://github.com/opendatalab/mineru) on the model layer; we ride the best available model and focus on what's around it.
+> **Model choice — GLM-OCR.** Scores **94.62 on OmniDocBench V1.5 (rank #1)** and is SOTA on formula / table recognition and information extraction. paperloom commits to **tracking the current SOTA** — when a stronger open model ships, the Ollama pin gets updated and the older one moves to an opt-in setting.
 
-The orchestration layer:
+What paperloom adds, on top of the model:
 
-| Capability | paperloom | marker | docling | MinerU | ocrmypdf |
-|---|---|---|---|---|---|
-| PDF/image → Markdown | ✅ (GLM-OCR) | ✅ (Surya + opt. LLM) | ✅ (VLM+OCR) | ✅ (VLM+OCR) | ❌ (PDF only) |
-| 19 chainable tools (split, merge, watermark, …) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Built-in PII redaction | ✅ (OPF) | ❌ | ❌ | ❌ | ❌ |
-| MCP server with security model | ✅ (allowlist + file_id) | ❌ | ❌ | ❌ | ❌ |
-| Streaming SSE (page-by-page) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Web UI included | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Python library + CLI | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Single model dependency | ✅ (one Ollama model) | ❌ (multi) | ❌ (multi) | ❌ (multi) | ✅ (Tesseract) |
+- **19 chainable PDF / Markdown / HTML / image tools** (split, merge, watermark, rotate, redact, OCR, …) composable in one streaming pipeline.
+- **Built-in PII anonymizer** (OpenAI Privacy Filter) inline in the same chain — no second pass, no external service.
+- **MCP server with a security model** — directory allowlist + opaque `file_id` references so an agent can't read arbitrary paths.
+- **Streaming SSE, page-by-page.** Mid-run results visible while the tail still runs; resumable batch.
+- **Three surfaces from one codebase** — Python library, CLI, MCP server — plus a Next.js web app.
+- **One Ollama model dependency**, not a model zoo.
 
-**Pick paperloom when:** you're building an agent workflow, you need PII redaction in the same pipeline as OCR, you prefer one Ollama model over a model zoo, or you want a web UI bundled.
-
-**Pick the others when:** raw OCR quality on complex layouts (math, tables, multi-column scientific PDFs) is the only thing that matters. Run our [benchmarks](./doc/benchmarks.md) on your own corpus before deciding.
+**Companion projects, not competitors.** Tools like [`marker`](https://github.com/datalab-to/marker), [`docling`](https://github.com/docling-project/docling), and [`MinerU`](https://github.com/opendatalab/mineru) focus on the model layer and are excellent there. paperloom doesn't try to out-research them — it tracks the SOTA model and invests in orchestration, privacy primitives, and developer ergonomics. If raw model quality on dense scientific PDFs is the only axis you care about, run [our benchmarks](./doc/benchmarks.md) on your corpus and pick what wins for you.
 
 ### Where paperloom shines
 
@@ -254,6 +248,17 @@ The repo is a pnpm workspace: web app in `web/`, FastAPI backend (and the Python
   [`a11y`](doc/rules/a11y.md),
   [`i18n`](doc/rules/i18n.md),
   [`shadcn`](doc/rules/shadcn.md).
+
+## Disclaimer
+
+paperloom is provided **as-is, with no warranty**. A few things that need saying in plain language before the LICENSE text covers them legally:
+
+- **OCR output may contain errors.** Vision models misread digits, drop columns, hallucinate text on noisy scans. For legal, medical, financial, or regulatory decisions, treat paperloom output as a draft and have a human verify against the source.
+- **PII anonymization is statistical, not a guarantee.** OpenAI Privacy Filter catches most names, emails, phone numbers, IDs, but it can miss entities — especially in non-English text or unusual formats. Re-read every redacted file before sharing it. paperloom is not a substitute for a compliance review.
+- **Privacy depends on your configuration.** In default `local` mode, files never leave your machine. With `OCR_PROVIDER=mistral` (or any future cloud provider), document bytes are sent to that provider. When paperloom runs as an MCP server inside a cloud-LLM client (Claude Desktop, ChatGPT, Cursor, etc.), tool I/O traverses that client's API. The privacy badge in the web UI and the MCP banner on stderr always show the active mode — read them before processing sensitive material.
+- **You are responsible for the documents you process.** paperloom does not verify that you have the right to OCR or redact a given file. Don't run it on material you don't own or have explicit permission to use.
+
+By using paperloom you accept these limits. Liability is disclaimed in the [LICENSE](LICENSE) — this section just makes it readable.
 
 ## License
 
