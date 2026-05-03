@@ -64,7 +64,7 @@ Disk: ~5 GB for the GLM-OCR model + ~4 GB for the OPF anonymizer checkpoint when
 
 | You want… | Run | Get |
 |---|---|---|
-| **Use as MCP server (Claude Desktop, Cursor, Cline, Agno)** | `uvx paperloom-mcp` | stdio MCP server with all 19 tools |
+| **Use as MCP server (Claude Desktop, Cursor, Cline, Agno)** | `uvx --from paperloom paperloom-mcp` | stdio MCP server with all 19 tools |
 | **Use as Python library / CLI in scripts** | `pip install paperloom` (or `uvx paperloom doctor`) | `from paperloom import ocr_to_markdown, ...` + `paperloom` CLI |
 | **Run the web app + dev** | `git clone … && pnpm install && pnpm dev` | Next.js UI on `localhost:3000`, FastAPI on `:8000` |
 
@@ -82,7 +82,7 @@ All three share the same backend code. See [`doc/distribution.md`](doc/distribut
 ollama pull glm-ocr:latest      # one-time, ~5 GB
 ```
 
-Wire `uvx paperloom-mcp` into your MCP client. For Claude Desktop, edit
+Wire `uvx --from paperloom paperloom-mcp` into your MCP client. For Claude Desktop, edit
 `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
@@ -90,7 +90,7 @@ Wire `uvx paperloom-mcp` into your MCP client. For Claude Desktop, edit
   "mcpServers": {
     "paperloom": {
       "command": "uvx",
-      "args": ["paperloom-mcp"],
+      "args": ["--from", "paperloom", "paperloom-mcp"],
       "env": {
         "PAPERLOOM_MCP_ALLOWED_DIRS": "/Users/you/Documents,/Users/you/Downloads"
       }

@@ -57,7 +57,7 @@
       "title": "Three ways in",
       "subtitle": "Pick the surface. The same backend ships behind all of them.",
       "mcp-label": "MCP server (Claude, Cursor, Cline)",
-      "mcp-cmd": "uvx paperloom-mcp",
+      "mcp-cmd": "uvx --from paperloom paperloom-mcp",
       "lib-label": "Python library + CLI",
       "lib-cmd": "pip install paperloom",
       "web-label": "Web app on localhost",

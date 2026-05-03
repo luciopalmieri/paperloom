@@ -84,6 +84,7 @@ Low risk: the stub-backend test matrix and the fake-key error path together cove
 - **Publish to PyPI.** Pre-release first (`paperloom==0.1.0rc1`) to validate the install path on a clean machine, then `0.1.0`.
 - **GitHub Action for release.** On `v*` tag, run tests, build wheels, publish to PyPI, update the Claude Code plugin marketplace metadata.
 - **Homebrew formula.** Long shot but sometimes useful for users who don't want a Python venv on their PATH.
+- **`paperloom-mcp` alias PyPI package.** Today users must invoke `uvx --from paperloom paperloom-mcp` because uvx doesn't auto-resolve a script name to its owning package. A 10-line stub package `paperloom-mcp` whose only dep is `paperloom==X.Y.Z` and whose only entry point re-exports `paperloom.mcp_server:main` would let users type `uvx paperloom-mcp` instead. Costs: doubles publish surface (must bump in lock-step with `paperloom`), and contradicts the "single PyPI package" decision logged below. Defer until at least one user files an issue about the `--from` friction. If we do this, drive it from a `release.yml` GitHub Action so the two packages can never drift.
 
 ## UI
 

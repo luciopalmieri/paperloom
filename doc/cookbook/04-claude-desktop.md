@@ -16,7 +16,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) â
   "mcpServers": {
     "paperloom": {
       "command": "uvx",
-      "args": ["paperloom-mcp"],
+      "args": ["--from", "paperloom", "paperloom-mcp"],
       "env": {
         "PAPERLOOM_MCP_ALLOWED_DIRS": "/Users/you/Documents,/Users/you/Downloads,/Users/you/Desktop"
       }

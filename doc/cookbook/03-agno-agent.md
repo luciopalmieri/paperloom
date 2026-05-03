@@ -12,7 +12,7 @@ from agno.tools.mcp import MCPTools
 
 paperloom = MCPTools(
     command="uvx",
-    args=["paperloom-mcp"],
+    args=["--from", "paperloom", "paperloom-mcp"],
     env={
         "PAPERLOOM_MCP_ALLOWED_DIRS": "/Users/you/Documents,/Users/you/Downloads",
     },

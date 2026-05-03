@@ -80,7 +80,7 @@ These need real services or browser tabs. Don't publish to PyPI until they all p
 
 ### MCP integration
 
-- [ ] **2.6 MCP from Claude Desktop** — wire `uvx paperloom-mcp` into `claude_desktop_config.json`. Restart Claude Desktop. Banner appears in app logs (`~/Library/Logs/Claude/mcp-server-paperloom.log` on macOS). Drive a real OCR with "OCR `~/Downloads/x.pdf`".
+- [ ] **2.6 MCP from Claude Desktop** — wire `uvx --from paperloom paperloom-mcp` into `claude_desktop_config.json` (`"args": ["--from", "paperloom", "paperloom-mcp"]`). Restart Claude Desktop. Banner appears in app logs (`~/Library/Logs/Claude/mcp-server-paperloom.log` on macOS). Drive a real OCR with "OCR `~/Downloads/x.pdf`".
 - [ ] **2.7 Mistral backend (real API)** — only if you have an API key with budget for the test. `OCR_PROVIDER=mistral MISTRAL_API_KEY=sk-... paperloom ocr small.pdf`. Verify markdown returned, mode reports `hybrid`.
 - [ ] **2.8 OPF auto-install** — drop OPF from your venv (`uv pip uninstall opf`), trigger an `anonymize` chain, verify the SSE event sequence emits `installing_opf` and the chain completes after the install. (Not required every release — only after touching `paperloom/anonymizer/_lazy_install.py`.)
 
@@ -121,11 +121,12 @@ These need real services or browser tabs. Don't publish to PyPI until they all p
   ```
 - [ ] **3.3 `uvx` from TestPyPI**
   ```bash
-  uvx --index https://test.pypi.org/simple/ \
+  uvx --from paperloom==X.Y.Z \
       --index https://pypi.org/simple/ \
+      --index https://test.pypi.org/simple/ \
       paperloom-mcp <<< ""
   ```
-  Banner prints, server exits.
+  Banner prints, server exits. Note: PyPI **must** be the first index. With TestPyPI primary, pip/uv resolves common dep names (e.g. `fastapi`) against TestPyPI first and may pick a fake/squatter version with a higher number than the real one. The `--from paperloom` is required because `paperloom-mcp` is an entry-point script of the `paperloom` package, not a separate package.
 
 If any of 3.1–3.3 fails, fix and re-tag a `rc.N` candidate (`X.Y.ZrcN`) — TestPyPI does not allow re-uploading the same version filename.
 
@@ -138,9 +139,9 @@ Only after Tier 1 + Tier 2 (+ Tier 3 if changing packaging) are all checked.
   ```bash
   cd backend && uv publish dist/*
   ```
-- [ ] **4.3 Smoke `uvx paperloom-mcp` from public PyPI**
+- [ ] **4.3 Smoke `uvx --from paperloom paperloom-mcp` from public PyPI**
   ```bash
-  uvx --no-cache paperloom-mcp <<< ""
+  uvx --no-cache --from paperloom paperloom-mcp <<< ""
   ```
 - [ ] **4.4 Update Claude Code plugin marketplace** — bump `.claude-plugin/plugin.json` `version`, commit, push to the marketplace repo / branch.
 - [ ] **4.5 Announce** — write release notes against the tag on GitHub, link to the new docs (`doc/distribution.md`, `doc/cookbook/`).

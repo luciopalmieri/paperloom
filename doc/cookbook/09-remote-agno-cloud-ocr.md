@@ -57,7 +57,7 @@ from agno.tools.mcp import MCPTools
 
 paperloom = MCPTools(
     command="uvx",
-    args=["paperloom-mcp"],
+    args=["--from", "paperloom", "paperloom-mcp"],
     env={
         "OCR_PROVIDER": "mistral",
         "MISTRAL_API_KEY": os.environ["MISTRAL_API_KEY"],

@@ -57,7 +57,7 @@
       "title": "Tre vie d'ingresso",
       "subtitle": "Scegli la superficie. Lo stesso backend gira sotto a tutte e tre.",
       "mcp-label": "Server MCP (Claude, Cursor, Cline)",
-      "mcp-cmd": "uvx paperloom-mcp",
+      "mcp-cmd": "uvx --from paperloom paperloom-mcp",
       "lib-label": "Libreria Python + CLI",
       "lib-cmd": "pip install paperloom",
       "web-label": "Web app su localhost",

@@ -33,7 +33,7 @@ uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'
 
 ### Claude Code plugin: `.claude-plugin/`
 
-Thin manifest that wires `uvx paperloom-mcp` as the plugin's MCP server, plus three slash commands and three skills. Everything else is in PyPI — the plugin pulls it transitively via `uvx`.
+Thin manifest that wires `uvx --from paperloom paperloom-mcp` as the plugin's MCP server, plus three slash commands and three skills. Everything else is in PyPI — the plugin pulls it transitively via `uvx`.
 
 ```
 .claude-plugin/
@@ -57,7 +57,7 @@ Full monorepo. `pnpm install:all` runs `pnpm install` (web) and `cd backend && u
 
 | Constraint | Implication |
 |---|---|
-| Agent users want zero-clone | → `uvx paperloom-mcp` (no repo, no node) |
+| Agent users want zero-clone | → `uvx --from paperloom paperloom-mcp` (no repo, no node) |
 | Library users hate setup | → PyPI install (no repo, no node, no Ollama unless they OCR) |
 | Web UI users want a real app | → Docker / pnpm dev |
 | All three share the same Python | → one package source, `backend/paperloom/`, three deployment shapes |
@@ -91,4 +91,4 @@ Anything else (`paperloom.tools.*`, `paperloom.chain`, `paperloom.jobs`, `paperl
 2. Update plugin `version` in `.claude-plugin/plugin.json` to match.
 3. Tag: `git tag v0.x.y && git push --tags`.
 4. Build + publish: `cd backend && uv build && uv publish` (needs PyPI token).
-5. The Claude Code plugin auto-resolves to the new version on next `uvx paperloom-mcp` invocation (uvx caches by version pin; users on `latest` get it automatically).
+5. The Claude Code plugin auto-resolves to the new version on next `uvx --from paperloom paperloom-mcp` invocation (uvx caches by version pin; users on `latest` get it automatically).
