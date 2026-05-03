@@ -6,8 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -104,54 +102,53 @@ export function PrivacyBadge() {
           {label}
         </Badge>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
-        <DropdownMenuLabel className="text-xs font-semibold">
+      <DropdownMenuContent align="end" className="w-80 p-0">
+        <div className="px-3 py-2 text-xs font-semibold">
           Privacy mode: <span className="uppercase">{privacy.mode}</span>
-        </DropdownMenuLabel>
+        </div>
         <DropdownMenuSeparator />
-        {privacy.components.map((c) => (
-          <DropdownMenuItem
-            key={c.name}
-            className="flex flex-col items-start gap-0.5 text-xs"
-            disabled
-          >
-            <div className="flex w-full items-center justify-between font-medium">
-              <span className="capitalize">{c.name}</span>
-              <span
-                className={cn(
-                  "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase",
-                  c.is_local
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                    : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
-                )}
-              >
-                {c.is_local ? "local" : "cloud"}
-              </span>
+        <div className="flex flex-col gap-2 px-3 py-2">
+          {privacy.components.map((c) => (
+            <div key={c.name} className="flex flex-col gap-0.5 text-xs">
+              <div className="flex w-full items-center justify-between font-medium">
+                <span className="capitalize">{c.name}</span>
+                <span
+                  className={cn(
+                    "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase",
+                    c.is_local
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
+                  )}
+                >
+                  {c.is_local ? "local" : "cloud"}
+                </span>
+              </div>
+              <span className="text-muted-foreground">{c.detail}</span>
             </div>
-            <span className="text-muted-foreground">{c.detail}</span>
-          </DropdownMenuItem>
-        ))}
+          ))}
+        </div>
         {privacy.caveats.length > 0 && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="text-muted-foreground px-3 pt-2 text-[10px] font-semibold uppercase tracking-wider">
               Caveats
-            </DropdownMenuLabel>
-            {privacy.caveats.map((c, i) => (
-              <DropdownMenuItem
-                key={i}
-                className="text-[11px] text-muted-foreground whitespace-normal break-normal"
-                disabled
-              >
-                {c}
-              </DropdownMenuItem>
-            ))}
+            </div>
+            <div className="flex flex-col gap-1.5 px-3 pb-2 pt-1">
+              {privacy.caveats.map((c, i) => (
+                <p
+                  key={i}
+                  className="text-muted-foreground text-[11px] leading-snug"
+                >
+                  {c}
+                </p>
+              ))}
+            </div>
           </>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-[10px] text-muted-foreground">
+        <div className="text-muted-foreground px-3 py-2 text-[10px]">
           paperloom v{version}
-        </DropdownMenuLabel>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
