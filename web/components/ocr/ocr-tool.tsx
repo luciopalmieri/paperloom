@@ -10,7 +10,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AiBadge } from "@/components/ui/ai-badge";
@@ -92,7 +92,7 @@ export function OcrTool() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const previewRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const markdownRefs = useRef<Record<number, HTMLPreElement | null>>({});
-  const thumbStripRef = useRef<HTMLDivElement | null>(null);
+  const thumbStripRef = useRef<HTMLOListElement | null>(null);
 
   useEffect(() => () => esRef.current?.close(), []);
 
@@ -386,35 +386,12 @@ export function OcrTool() {
     [],
   );
 
-  const onThumbKeyDown = (e: React.KeyboardEvent, p: number) => {
-    if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-      e.preventDefault();
-      const next = Math.min(state.totalPages, p + 1);
-      jumpToPage(next);
-      const el = thumbStripRef.current?.querySelector<HTMLButtonElement>(
-        `[data-thumb="${next}"]`,
-      );
-      el?.focus();
-    } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-      e.preventDefault();
-      const prev = Math.max(1, p - 1);
-      jumpToPage(prev);
-      const el = thumbStripRef.current?.querySelector<HTMLButtonElement>(
-        `[data-thumb="${prev}"]`,
-      );
-      el?.focus();
-    } else if (e.key === " ") {
-      e.preventDefault();
-      toggleSelected(p);
-    }
-  };
-
-  const updateSelection = (next: Set<number>) => {
+  const updateSelection = useCallback((next: Set<number>) => {
     setSelected(next);
     setPageInput(formatPageRange(next));
-  };
+  }, []);
 
-  const toggleSelected = (p: number) => {
+  const toggleSelected = useCallback((p: number) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(p)) next.delete(p);
@@ -422,7 +399,33 @@ export function OcrTool() {
       setPageInput(formatPageRange(next));
       return next;
     });
-  };
+  }, []);
+
+  const onThumbKeyDown = useCallback(
+    (e: React.KeyboardEvent, p: number) => {
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+        e.preventDefault();
+        const next = Math.min(state.totalPages, p + 1);
+        jumpToPage(next);
+        const el = thumbStripRef.current?.querySelector<HTMLButtonElement>(
+          `[data-thumb="${next}"]`,
+        );
+        el?.focus();
+      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        const prev = Math.max(1, p - 1);
+        jumpToPage(prev);
+        const el = thumbStripRef.current?.querySelector<HTMLButtonElement>(
+          `[data-thumb="${prev}"]`,
+        );
+        el?.focus();
+      } else if (e.key === " ") {
+        e.preventDefault();
+        toggleSelected(p);
+      }
+    },
+    [state.totalPages, jumpToPage, toggleSelected],
+  );
 
   const selectAll = () => {
     updateSelection(new Set(Array.from({ length: state.totalPages }, (_, i) => i + 1)));
@@ -452,16 +455,19 @@ export function OcrTool() {
       <header className="flex items-start justify-between gap-4">
         <div>
           <div className="mb-2 flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+            <h1 className="font-mono text-2xl font-semibold tracking-tight">
+              {t("title")}
+            </h1>
             <AiBadge />
           </div>
-          <p className="text-muted-foreground">{t("subtitle")}</p>
+          <p className="text-muted-foreground max-w-prose text-base">{t("subtitle")}</p>
         </div>
       </header>
 
       {!state.uploaded && (
         <button
           type="button"
+          aria-label={t("upload-aria")}
           onClick={() => inputRef.current?.click()}
           onDragOver={(e) => {
             e.preventDefault();
@@ -516,12 +522,12 @@ export function OcrTool() {
                 {f.number(state.doneCount)} / {f.number(totalToProcess)}
               </span>
               {state.status === "cancelled" && (
-                <span className="text-amber-700 dark:text-amber-300 text-xs">
+                <span className="text-warning text-xs">
                   · {t("status-cancelled")}
                 </span>
               )}
               {state.status === "done" && (
-                <span className="text-emerald-700 dark:text-emerald-400 text-xs">
+                <span className="text-success text-xs">
                   · {t("status-done")}
                 </span>
               )}
@@ -583,7 +589,7 @@ export function OcrTool() {
             <div
               role="region"
               aria-labelledby="pre-run-title"
-              className="border-amber-300 bg-amber-50 text-amber-950 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-50 flex flex-col gap-3 rounded-md border p-3 text-sm"
+              className="border-warning/40 bg-warning/10 text-foreground flex flex-col gap-3 rounded-md border p-3 text-sm"
             >
               <div>
                 <p id="pre-run-title" className="font-medium">
@@ -653,7 +659,7 @@ export function OcrTool() {
                   </span>
                 )}
               </div>
-              <p id="ocr-page-range-help" className="text-muted-foreground text-[10px]">
+              <p id="ocr-page-range-help" className="text-muted-foreground text-xs">
                 {t("range-help")}
               </p>
             </div>
@@ -661,8 +667,8 @@ export function OcrTool() {
 
           <label
             className={
-              "flex items-center gap-2 text-xs " +
-              (state.status === "running" ? "text-muted-foreground" : "")
+              "inline-flex min-h-6 items-center gap-2 py-1.5 text-xs cursor-pointer " +
+              (state.status === "running" ? "text-muted-foreground cursor-not-allowed" : "")
             }
           >
             <input
@@ -672,7 +678,7 @@ export function OcrTool() {
               onChange={(e) =>
                 setState((s) => ({ ...s, includeImages: e.target.checked }))
               }
-              className="h-3.5 w-3.5"
+              className="h-4 w-4"
             />
             <span className="font-medium">{t("include-figures-label")}</span>
             <span className="text-muted-foreground">{t("include-figures-help")}</span>
@@ -680,16 +686,22 @@ export function OcrTool() {
 
           <div role="tablist" aria-label={t("view-tabs-label")} className="flex gap-1 md:hidden">
             <MobileTab
+              id="ocr-tab-pages"
+              controls="ocr-panel-pages"
               label={t("tab-pages")}
               active={mobileTab === "pages"}
               onClick={() => setMobileTab("pages")}
             />
             <MobileTab
+              id="ocr-tab-preview"
+              controls="ocr-panel-preview"
               label={t("tab-preview")}
               active={mobileTab === "preview"}
               onClick={() => setMobileTab("preview")}
             />
             <MobileTab
+              id="ocr-tab-markdown"
+              controls="ocr-panel-markdown"
               label={t("tab-markdown")}
               active={mobileTab === "markdown"}
               onClick={() => setMobileTab("markdown")}
@@ -698,18 +710,21 @@ export function OcrTool() {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-[10rem_1fr_1fr]">
             <Card
+              role="tabpanel"
+              id="ocr-panel-pages"
+              aria-labelledby="ocr-tab-pages"
               className={
                 "overflow-hidden " +
                 (mobileTab === "pages" ? "" : "hidden md:block")
               }
             >
               <CardHeader className="flex flex-row items-center justify-between gap-2 px-3 py-2">
-                <CardTitle className="text-xs font-medium">{t("tab-pages")}</CardTitle>
+                <CardTitle as="h2" className="text-xs font-semibold uppercase tracking-wide">{t("tab-pages")}</CardTitle>
                 {selected.size === 0 && state.totalPages > 1 && (
                   <button
                     type="button"
                     onClick={selectAll}
-                    className="text-muted-foreground hover:text-foreground text-[10px] underline-offset-2 hover:underline"
+                    className="text-muted-foreground hover:text-foreground text-xs underline-offset-2 hover:underline"
                   >
                     {t("select")}
                   </button>
@@ -717,45 +732,52 @@ export function OcrTool() {
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[70vh]">
-                  <div
+                  <ol
                     ref={thumbStripRef}
-                    role="listbox"
                     aria-label={t("tab-pages")}
-                    aria-multiselectable="true"
-                    aria-activedescendant={
-                      state.activePage ? `thumb-${state.activePage}` : undefined
-                    }
                     className="flex flex-col gap-2 p-2"
                   >
-                    {Array.from({ length: state.totalPages }, (_, i) => i + 1).map((p) => (
-                      <PageThumbnail
-                        key={p}
-                        fileId={state.uploaded!.file_id}
-                        page={p}
-                        bust={previewBust}
-                        active={state.activePage === p}
-                        status={pageStatus(p)}
-                        selected={selected.has(p)}
-                        statusLabel={t(`page-status-${pageStatus(p)}`)}
-                        figures={state.pageFigures[p]}
-                        onClick={() => jumpToPage(p)}
-                        onToggle={() => toggleSelected(p)}
-                        onKeyDown={(e) => onThumbKeyDown(e, p)}
-                      />
-                    ))}
-                  </div>
+                    {Array.from({ length: state.totalPages }, (_, i) => i + 1).map((p) => {
+                      const active = state.activePage === p;
+                      const isFirstFocusable =
+                        state.activePage == null && p === 1;
+                      const statusLabel = t(`page-status-${pageStatus(p)}`);
+                      return (
+                        <PageThumbnail
+                          key={p}
+                          fileId={state.uploaded!.file_id}
+                          page={p}
+                          bust={previewBust}
+                          active={active}
+                          tabIndex={active || isFirstFocusable ? 0 : -1}
+                          status={pageStatus(p)}
+                          selected={selected.has(p)}
+                          statusLabel={statusLabel}
+                          ariaLabel={t("page-aria", { page: p, status: statusLabel })}
+                          selectAriaLabel={t("select-page-aria", { page: p })}
+                          figures={state.pageFigures[p]}
+                          onClick={() => jumpToPage(p)}
+                          onToggle={() => toggleSelected(p)}
+                          onKeyDown={(e) => onThumbKeyDown(e, p)}
+                        />
+                      );
+                    })}
+                  </ol>
                 </ScrollArea>
               </CardContent>
             </Card>
 
             <Card
+              role="tabpanel"
+              id="ocr-panel-preview"
+              aria-labelledby="ocr-tab-preview"
               className={
                 "overflow-hidden " +
                 (mobileTab === "preview" ? "" : "hidden md:block")
               }
             >
               <CardHeader className="flex flex-row items-center justify-between gap-2">
-                <CardTitle className="text-sm font-medium">{t("tab-preview")}</CardTitle>
+                <CardTitle as="h2" className="text-sm font-semibold">{t("tab-preview")}</CardTitle>
                 {state.uploaded && isImageName(state.uploaded.filename) && (
                   <Button size="sm" variant="outline" onClick={onRotate}>
                     <RotateCw className="mr-1 size-3" aria-hidden />
@@ -787,13 +809,16 @@ export function OcrTool() {
             </Card>
 
             <Card
+              role="tabpanel"
+              id="ocr-panel-markdown"
+              aria-labelledby="ocr-tab-markdown"
               className={
                 "overflow-hidden " +
                 (mobileTab === "markdown" ? "" : "hidden md:block")
               }
             >
               <CardHeader>
-                <CardTitle className="text-sm font-medium">{t("tab-markdown")}</CardTitle>
+                <CardTitle as="h2" className="text-sm font-semibold">{t("tab-markdown")}</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[70vh]">
@@ -829,10 +854,14 @@ export function OcrTool() {
 }
 
 function MobileTab({
+  id,
+  controls,
   label,
   active,
   onClick,
 }: {
+  id: string;
+  controls: string;
   label: string;
   active: boolean;
   onClick: () => void;
@@ -841,10 +870,13 @@ function MobileTab({
     <button
       type="button"
       role="tab"
+      id={id}
+      aria-controls={controls}
       aria-selected={active}
+      tabIndex={active ? 0 : -1}
       onClick={onClick}
       className={
-        "focus-visible:ring-ring/50 inline-flex h-8 flex-1 items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none " +
+        "focus-visible:ring-ring/50 inline-flex h-10 flex-1 items-center justify-center rounded-md text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:outline-none " +
         (active
           ? "bg-foreground text-background"
           : "border-input bg-background text-muted-foreground border")
@@ -857,20 +889,23 @@ function MobileTab({
 
 const STATUS_DOT: Record<PageStatus, string> = {
   pending: "bg-muted-foreground/40",
-  processing: "bg-blue-500 animate-pulse",
-  done: "bg-emerald-500",
+  processing: "bg-info animate-pulse",
+  done: "bg-success",
   skipped: "bg-muted-foreground/20",
-  cancelled: "bg-amber-500",
+  cancelled: "bg-warning",
 };
 
-function PageThumbnail({
+const PageThumbnail = memo(function PageThumbnail({
   fileId,
   page,
   bust,
   active,
+  tabIndex,
   status,
   selected,
   statusLabel,
+  ariaLabel,
+  selectAriaLabel,
   figures,
   onClick,
   onToggle,
@@ -880,13 +915,16 @@ function PageThumbnail({
   page: number;
   bust: number;
   active: boolean;
+  tabIndex: 0 | -1;
   status: PageStatus;
   selected: boolean;
   statusLabel: string;
+  ariaLabel: string;
+  selectAriaLabel: string;
   figures?: PageFigures;
-  onClick: () => void;
-  onToggle: () => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
+  onClick: (page: number) => void;
+  onToggle: (page: number) => void;
+  onKeyDown: (e: React.KeyboardEvent, page: number) => void;
 }) {
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
@@ -896,11 +934,8 @@ function PageThumbnail({
     backendUrl(`/api/files/${fileId}/preview?page=${page}`) + (bust ? `&v=${bust}` : "");
 
   return (
-    <div
-      role="option"
-      id={`thumb-${page}`}
-      aria-selected={selected}
-      aria-current={active ? "true" : undefined}
+    <li
+      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 180px" }}
       className={
         "group focus-within:ring-ring/50 relative flex flex-col items-stretch rounded-md border p-1 text-xs transition-colors focus-within:ring-2 " +
         (active
@@ -913,19 +948,31 @@ function PageThumbnail({
       <button
         type="button"
         data-thumb={page}
-        onClick={onClick}
-        onKeyDown={onKeyDown}
-        aria-label={`${page} · ${statusLabel}`}
+        tabIndex={tabIndex}
+        aria-current={active ? "true" : undefined}
+        onClick={() => onClick(page)}
+        onKeyDown={(e) => onKeyDown(e, page)}
+        aria-label={ariaLabel}
         className="focus:outline-none"
       >
         <div className="border-input relative aspect-[8.5/11] w-full overflow-hidden rounded border">
-          {!loaded && <Skeleton className="h-full w-full" />}
+          <Skeleton
+            className={
+              "absolute inset-0 transition-opacity duration-200 ease-out-quart " +
+              (loaded ? "opacity-0" : "opacity-100")
+            }
+          />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={url}
             alt=""
             aria-hidden
-            className={loaded ? "block h-full w-full object-cover" : "hidden"}
+            loading="lazy"
+            decoding="async"
+            className={
+              "absolute inset-0 block h-full w-full object-cover transition-opacity duration-200 ease-out-quart " +
+              (loaded ? "opacity-100" : "opacity-0")
+            }
             onLoad={() => setLoaded(true)}
           />
         </div>
@@ -936,18 +983,14 @@ function PageThumbnail({
               aria-hidden
               className={`inline-block size-2 rounded-full ${STATUS_DOT[status]}`}
             />
-            <span className="text-muted-foreground text-[10px]">{statusLabel}</span>
+            <span className="text-muted-foreground text-xs">{statusLabel}</span>
           </span>
         </div>
         {figures && figures.total > 0 && (
           <div
             className={
-              "mt-0.5 text-right text-[9px] tabular-nums " +
-              (figures.saved === 0
-                ? "text-amber-600 dark:text-amber-400"
-                : figures.saved === figures.total
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-amber-600 dark:text-amber-400")
+              "mt-0.5 text-right text-xs tabular-nums " +
+              (figures.saved === figures.total ? "text-success" : "text-warning")
             }
           >
             {figures.saved}/{figures.total} fig
@@ -955,22 +998,22 @@ function PageThumbnail({
         )}
       </button>
       <label
-        className="absolute top-1.5 left-1.5 flex h-5 w-5 cursor-pointer items-center justify-center rounded bg-background/90 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 has-[:checked]:opacity-100"
+        className="absolute top-1 left-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded bg-background/90 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 has-[:checked]:opacity-100"
         onClick={(e) => e.stopPropagation()}
       >
         <input
           type="checkbox"
           checked={selected}
-          onChange={onToggle}
-          className="h-3 w-3"
-          aria-label={`Select page ${page}`}
+          onChange={() => onToggle(page)}
+          className="h-3.5 w-3.5"
+          aria-label={selectAriaLabel}
         />
       </label>
-    </div>
+    </li>
   );
-}
+});
 
-function PagePreview({
+const PagePreview = memo(function PagePreview({
   fileId,
   page,
   alt,
@@ -987,15 +1030,20 @@ function PagePreview({
   }, [bust]);
   const url = backendUrl(`/api/files/${fileId}/preview?page=${page}`) + (bust ? `&v=${bust}` : "");
   return (
-    <div className="border-input relative overflow-hidden rounded border">
+    <div
+      style={{ contentVisibility: "auto", containIntrinsicSize: "auto 800px" }}
+      className="border-input relative overflow-hidden rounded border"
+    >
       {!loaded && <Skeleton className="aspect-[8.5/11] w-full" />}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={url}
         alt={alt}
+        loading="lazy"
+        decoding="async"
         className={loaded ? "block w-full" : "hidden"}
         onLoad={() => setLoaded(true)}
       />
     </div>
   );
-}
+});

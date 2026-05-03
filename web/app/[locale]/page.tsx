@@ -21,8 +21,12 @@ function Home() {
       className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl flex-col gap-8 px-6 py-12"
     >
       <header>
-        <h1 className="text-3xl font-semibold tracking-tight">{t("heading")}</h1>
-        <p className="text-muted-foreground mt-1">{t("subheading")}</p>
+        <h1 className="font-mono text-3xl font-semibold tracking-tight">
+          {t("heading")}
+        </h1>
+        <p className="text-muted-foreground mt-2 max-w-prose text-base">
+          {t("subheading")}
+        </p>
       </header>
 
       <HealthPill />

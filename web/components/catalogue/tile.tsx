@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 import { AiBadge } from "@/components/ui/ai-badge";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "@/i18n/navigation";
 
 type OpfStatus = { label: string; tone: "ready" | "needed" };
@@ -17,55 +16,48 @@ type Props = {
   opfStatus?: OpfStatus | null;
 };
 
-export function ToolTile({ slug, name, ai, available, href, comingLabel, opfStatus }: Props) {
-  const inner: ReactNode = (
-    <Card
-      data-slot="tool-tile"
-      className={`h-full transition-colors ${
-        available ? "hover:border-foreground/30" : "opacity-60"
-      }`}
-    >
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between gap-2 text-base">
-          <span>{name}</span>
-          {ai && <AiBadge />}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
-        <code className="truncate">{slug}</code>
-        <div className="flex items-center gap-2">
-          {opfStatus && (
-            <Badge
-              variant={opfStatus.tone === "ready" ? "secondary" : "outline"}
-              className={
-                opfStatus.tone === "needed"
-                  ? "border-amber-300 text-amber-900 dark:border-amber-700 dark:text-amber-100"
-                  : ""
-              }
-            >
-              {opfStatus.label}
-            </Badge>
-          )}
-          {!available && <Badge variant="outline">{comingLabel}</Badge>}
-        </div>
-      </CardContent>
-    </Card>
+export function ToolTile({ name, ai, available, href, comingLabel, opfStatus }: Props) {
+  const meta: ReactNode = (
+    <span className="flex shrink-0 items-center gap-2">
+      {ai && <AiBadge />}
+      {opfStatus && (
+        <Badge
+          variant={opfStatus.tone === "ready" ? "secondary" : "outline"}
+          className={
+            opfStatus.tone === "needed" ? "border-warning/50 text-warning" : ""
+          }
+        >
+          {opfStatus.label}
+        </Badge>
+      )}
+      {!available && <Badge variant="outline">{comingLabel}</Badge>}
+    </span>
   );
+
+  const content = (
+    <>
+      <h3 className="text-sm font-medium leading-snug">{name}</h3>
+      {meta}
+    </>
+  );
+
+  const base =
+    "flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5 transition-colors";
 
   if (available && href) {
     return (
       <Link
         href={href}
-        className="focus-visible:ring-ring/50 block rounded-lg focus-visible:ring-2 focus-visible:outline-none"
+        className={`${base} hover:bg-muted hover:border-foreground/30 focus-visible:ring-ring/50 focus-visible:ring-2 focus-visible:outline-none`}
       >
-        {inner}
+        {content}
       </Link>
     );
   }
 
   return (
-    <div role="link" aria-disabled="true" tabIndex={0} className="cursor-not-allowed">
-      {inner}
+    <div aria-disabled="true" className={`${base} opacity-60 cursor-not-allowed`}>
+      {content}
     </div>
   );
 }

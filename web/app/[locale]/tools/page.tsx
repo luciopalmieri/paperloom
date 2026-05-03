@@ -101,8 +101,12 @@ export default async function ToolsCataloguePage({ params }: Props) {
   return (
     <main id="main" className="mx-auto flex min-h-screen max-w-6xl flex-col gap-8 px-6 py-8">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">{tCat("title")}</h1>
-        <p className="text-muted-foreground mt-1">{tCat("subtitle")}</p>
+        <h1 className="font-mono text-2xl font-semibold tracking-tight">
+          {tCat("title")}
+        </h1>
+        <p className="text-muted-foreground mt-2 max-w-prose text-base">
+          {tCat("subtitle")}
+        </p>
       </header>
 
       <CatalogueGrid sections={translatedSections} opfReady={opfReady} />

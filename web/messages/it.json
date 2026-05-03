@@ -23,6 +23,17 @@
     "dark": "Scuro",
     "system": "Sistema"
   },
+  "privacy": {
+    "label": "Modalità privacy: {mode}",
+    "header": "Modalità privacy",
+    "mode-local": "Locale",
+    "mode-hybrid": "Ibrida",
+    "mode-cloud": "Cloud",
+    "scope-local": "locale",
+    "scope-cloud": "cloud",
+    "caveats": "Note",
+    "version": "paperloom v{version}"
+  },
   "locale": {
     "label": "Lingua",
     "en": "English",
@@ -91,7 +102,7 @@
       "event-starting": "Avvio di {name}…",
       "event-processing": "Pagina {page} di {total}",
       "event-cancelled": "Annullato",
-      "event-cancelled-toast": "Disconnesso dal job — il backend potrebbe continuare l'esecuzione.",
+      "event-cancelled-toast": "Disconnesso dal job. Il backend potrebbe continuare l'esecuzione.",
       "node-label": "Passo {n}: {name}",
       "node-roledescription": "passo della chain",
       "draft-restored": "Ripristinata l'ultima chain",
@@ -100,7 +111,7 @@
       "tool-added": "Aggiunto {name}",
       "run-success": "Completato",
       "progress": {
-        "downloading_opf": "Download modello OPF (~4 GB) in ~/.opf/privacy_filter — una tantum, solo al primissimo utilizzo…",
+        "downloading_opf": "Download modello OPF (~4 GB) in ~/.opf/privacy_filter (una tantum, solo al primissimo utilizzo)…",
         "loading_opf": "Caricamento modello OPF in memoria…",
         "detecting": "Anonimizzazione di {filename} in corso…",
         "writing_report": "Scrittura report redazioni per {filename}…"
@@ -134,7 +145,7 @@
       "non-en-warning": "Input non in inglese rilevato. OPF è ottimizzato per l'inglese; per migliore recall passa al preset {preset}.",
       "footer-license": "Motore di rilevamento: OpenAI Privacy Filter (Apache 2.0).",
       "install-title": "L'anonimizzazione richiede OpenAI Privacy Filter",
-      "install-body": "OPF è il motore di detection. Non è installato di default perché richiede torch + transformers (~250 MB) e scarica un checkpoint del modello (~4 GB) al primo run in ~/.opf/privacy_filter. Tutto resta sulla tua macchina — nessun telemetry, nessun round-trip cloud.",
+      "install-body": "OPF è il motore di detection. Non è installato di default perché richiede torch + transformers (~250 MB) e scarica un checkpoint del modello (~4 GB) al primo run in ~/.opf/privacy_filter. Tutto resta sulla tua macchina: nessun telemetry, nessun round-trip cloud.",
       "install-cmd-label": "Esegui in un terminale dalla root del repo:",
       "install-restart": "Riavvia <cmd></cmd> al termine dell'installazione.",
       "install-copy": "Copia comando",
@@ -170,6 +181,9 @@
       "uploading": "Caricamento…",
       "starting": "Avvio OCR…",
       "page-of": "Pagina {page} di {filename}",
+      "page-aria": "Pagina {page}, {status}",
+      "select-page-aria": "Seleziona pagina {page}",
+      "upload-aria": "Carica un PDF o un'immagine",
       "stream-region": "Output OCR, aggiornato a mano a mano che le pagine vengono processate",
       "no-output-yet": "In attesa della prima pagina…",
       "download": "Scarica {name} ({size})",
@@ -189,7 +203,7 @@
       "tab-preview": "Anteprima",
       "tab-markdown": "Markdown",
       "stop": "Ferma",
-      "stopped": "OCR fermato — il backend potrebbe continuare.",
+      "stopped": "OCR fermato. Il backend potrebbe continuare.",
       "restart": "Riavvia",
       "replace": "Sostituisci file",
       "status-cancelled": "Fermato",
@@ -207,13 +221,13 @@
       "range-label": "Pagine",
       "range-placeholder": "1,3-5,7",
       "range-help": "Pagine o intervalli separati da virgola (es. 1,3-5,7).",
-      "pre-run-title": "{count} pagine — scegli cosa convertire",
+      "pre-run-title": "{count} pagine: scegli cosa convertire",
       "pre-run-body": "I documenti lunghi richiedono tempo. Converti tutto, oppure limita a pagine specifiche.",
       "run-all": "Converti tutte le {n} pagine",
       "include-figures-label": "Includi figure",
       "include-figures-help": "Ritaglia le figure e le include nello ZIP scaricato.",
       "figures-none-warning": "Nessuna figura ritagliata. Le didascalie sono comunque nel markdown.",
-      "figures-partial": "{saved} di {total} figure salvate. Per le altre non è stato possibile ritagliarle — solo didascalia."
+      "figures-partial": "{saved} di {total} figure salvate. Per le altre solo didascalia (nessun ritaglio possibile)."
     }
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -36,13 +37,8 @@ const MODE_VARIANT: Record<Privacy["mode"], "default" | "secondary" | "destructi
   cloud: "destructive",
 };
 
-const MODE_LABEL: Record<Privacy["mode"], string> = {
-  local: "Local",
-  hybrid: "Hybrid",
-  cloud: "Cloud",
-};
-
 export function PrivacyBadge() {
+  const t = useTranslations("privacy");
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,28 +71,28 @@ export function PrivacyBadge() {
 
   const { privacy, version } = status;
   const variant = MODE_VARIANT[privacy.mode];
-  const label = MODE_LABEL[privacy.mode];
+  const label = t(`mode-${privacy.mode}` as "mode-local" | "mode-hybrid" | "mode-cloud");
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label={`Privacy mode: ${label}`}
+        aria-label={t("label", { mode: label })}
         className="focus-visible:ring-ring/50 rounded-4xl outline-none focus-visible:ring-[3px]"
       >
         <Badge
           variant={variant}
           className={cn(
-            "cursor-pointer gap-1.5 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider",
-            privacy.mode === "local" && "bg-emerald-600 text-white hover:bg-emerald-600/90",
+            "gap-1.5 px-2.5 py-1 text-xs font-semibold uppercase tracking-wider",
+            privacy.mode === "local" && "bg-success text-background hover:bg-success/90",
           )}
         >
           <span
             aria-hidden
             className={cn(
               "size-1.5 rounded-full",
-              privacy.mode === "local" && "bg-emerald-200",
-              privacy.mode === "hybrid" && "bg-amber-300",
-              privacy.mode === "cloud" && "bg-red-200",
+              privacy.mode === "local" && "bg-background/70",
+              privacy.mode === "hybrid" && "bg-warning",
+              privacy.mode === "cloud" && "bg-destructive",
             )}
           />
           {label}
@@ -104,7 +100,7 @@ export function PrivacyBadge() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="px-3 py-2 text-xs font-semibold">
-          Privacy mode: <span className="uppercase">{privacy.mode}</span>
+          {t("header")}: <span>{label}</span>
         </div>
         <DropdownMenuSeparator />
         <div className="flex flex-col gap-2 px-3 py-2">
@@ -114,13 +110,13 @@ export function PrivacyBadge() {
                 <span className="capitalize">{c.name}</span>
                 <span
                   className={cn(
-                    "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase",
+                    "rounded px-1.5 py-0.5 text-xs font-semibold uppercase",
                     c.is_local
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                      : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
+                      ? "bg-success/15 text-success"
+                      : "bg-warning/15 text-warning",
                   )}
                 >
-                  {c.is_local ? "local" : "cloud"}
+                  {c.is_local ? t("scope-local") : t("scope-cloud")}
                 </span>
               </div>
               <span className="text-muted-foreground">{c.detail}</span>
@@ -130,14 +126,14 @@ export function PrivacyBadge() {
         {privacy.caveats.length > 0 && (
           <>
             <DropdownMenuSeparator />
-            <div className="text-muted-foreground px-3 pt-2 text-[10px] font-semibold uppercase tracking-wider">
-              Caveats
+            <div className="text-muted-foreground px-3 pt-2 text-xs font-semibold uppercase tracking-wider">
+              {t("caveats")}
             </div>
             <div className="flex flex-col gap-1.5 px-3 pb-2 pt-1">
               {privacy.caveats.map((c, i) => (
                 <p
                   key={i}
-                  className="text-muted-foreground text-[11px] leading-snug"
+                  className="text-muted-foreground text-xs leading-snug"
                 >
                   {c}
                 </p>
@@ -146,8 +142,8 @@ export function PrivacyBadge() {
           </>
         )}
         <DropdownMenuSeparator />
-        <div className="text-muted-foreground px-3 py-2 text-[10px]">
-          paperloom v{version}
+        <div className="text-muted-foreground px-3 py-2 text-xs">
+          {t("version", { version })}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

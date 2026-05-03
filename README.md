@@ -1,6 +1,6 @@
 # Paperloom
 
-> **Local-first document toolkit. Agent-native. Your files never leave your machine.**
+> **Local-first document toolkit. Agent-native. Your files never leave your machine by default.**
 
 **Paperloom** pairs a streaming OCR pipeline (GLM-OCR via [Ollama](https://ollama.ai)) with a chainable suite of PDF / Markdown / HTML / image tools and a built-in PII anonymizer. It ships three surfaces from the same code: a Python library, a CLI, and an MCP server — plus a Next.js web app on top.
 
