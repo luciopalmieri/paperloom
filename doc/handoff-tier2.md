@@ -13,7 +13,7 @@ You're picking up the Tier 2 release-test pass for `paperloom` before publishing
 
 - Repo root: /Users/luciopalmieri/Projects/_training/paperloom
 - Branch: feat/distribution-mcp-plugin (do not switch off it)
-- Tier 1 (automatable smoke) is fully green — verified in the previous session.
+- Tier 1 (automatable smoke) is fully green. Last verified at commit `82e74f3` after the anonymize-page split (`f806e15`) — re-run if any backend file under `backend/paperloom/` changes again.
 - Tier 2 is partially exercised in dev mode. The privacy badge, anonymize tool (paste + file), and the chain end-to-end have been seen working live on the user's machine.
 - Tier 3 + Tier 4 not yet attempted.
 
