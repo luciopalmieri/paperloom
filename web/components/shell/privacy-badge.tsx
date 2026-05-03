@@ -18,12 +18,20 @@ type Component = {
   provider: string;
   is_local: boolean;
   detail: string;
+  detail_key: string;
+  detail_params: Record<string, string>;
+};
+
+type Caveat = {
+  text: string;
+  key: string;
+  params: Record<string, string>;
 };
 
 type Privacy = {
   mode: "local" | "hybrid" | "cloud";
   components: Component[];
-  caveats: string[];
+  caveats: Caveat[];
 };
 
 type Status = {
@@ -107,7 +115,11 @@ export function PrivacyBadge() {
           {privacy.components.map((c) => (
             <div key={c.name} className="flex flex-col gap-0.5 text-xs">
               <div className="flex w-full items-center justify-between font-medium">
-                <span className="capitalize">{c.name}</span>
+                <span>
+                  {t.has(`component.${c.name}`)
+                    ? t(`component.${c.name}` as "component.ocr")
+                    : c.name}
+                </span>
                 <span
                   className={cn(
                     "rounded px-1.5 py-0.5 text-xs font-semibold uppercase",
@@ -119,7 +131,11 @@ export function PrivacyBadge() {
                   {c.is_local ? t("scope-local") : t("scope-cloud")}
                 </span>
               </div>
-              <span className="text-muted-foreground">{c.detail}</span>
+              <span className="text-muted-foreground">
+                {t.has(c.detail_key)
+                  ? t(c.detail_key as "detail.ocr.ollama", c.detail_params)
+                  : c.detail}
+              </span>
             </div>
           ))}
         </div>
@@ -135,7 +151,9 @@ export function PrivacyBadge() {
                   key={i}
                   className="text-muted-foreground text-xs leading-snug"
                 >
-                  {c}
+                  {t.has(c.key)
+                    ? t(c.key as "caveat.mcp_client", c.params)
+                    : c.text}
                 </p>
               ))}
             </div>

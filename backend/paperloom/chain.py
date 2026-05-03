@@ -41,13 +41,21 @@ async def run(
             "node_id": str(step),
         }
         step_outputs: list[Path] = []
-        async for ev_type, ev_data in handler(job_id, job_root, current_inputs, params, step):
-            if ev_type == "node.end" and "outputs" in ev_data:
-                step_outputs = [Path(p) for p in ev_data["outputs"]]
-            if ev_type == "error":
+        try:
+            async for ev_type, ev_data in handler(job_id, job_root, current_inputs, params, step):
+                if ev_type == "node.end" and "outputs" in ev_data:
+                    step_outputs = [Path(p) for p in ev_data["outputs"]]
+                if ev_type == "error":
+                    yield ev_type, ev_data
+                    return
                 yield ev_type, ev_data
-                return
-            yield ev_type, ev_data
+        except Exception as exc:
+            yield "error", {
+                "job_id": job_id,
+                "code": "internal_error",
+                "message": f"{type(exc).__name__}: {exc}",
+            }
+            return
 
         current_inputs = step_outputs
 

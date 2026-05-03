@@ -36,7 +36,7 @@ def _run_chain(
     paths = [Path(p).expanduser().resolve() for p in inputs]
     for p in paths:
         if not p.is_file():
-            raise FileNotFoundError(p)
+            raise PaperloomError("input_not_found", str(p))
     job = _jobs_mod.create_job(chain, [str(p) for p in paths])
 
     async def _drive() -> dict[str, Any]:
@@ -70,7 +70,7 @@ async def arun_chain(
     paths = [Path(p).expanduser().resolve() for p in inputs]
     for p in paths:
         if not p.is_file():
-            raise FileNotFoundError(p)
+            raise PaperloomError("input_not_found", str(p))
     job = _jobs_mod.create_job(chain, [str(p) for p in paths])
     artifacts: list[dict[str, Any]] = []
     last_error: dict[str, Any] | None = None

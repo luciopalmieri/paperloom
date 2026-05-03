@@ -471,7 +471,7 @@ def main() -> None:
     state = current_state()
     print(f"paperloom-mcp {__version__} — {short_summary()}", file=sys.stderr, flush=True)
     for caveat in state["caveats"]:
-        print(f"  caveat: {caveat}", file=sys.stderr, flush=True)
+        print(f"  caveat: {caveat['text']}", file=sys.stderr, flush=True)
     mcp.run(transport="stdio")
 
 

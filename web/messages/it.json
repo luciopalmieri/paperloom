@@ -8,6 +8,10 @@
     "subheading": "Intelligenza per i tuoi documenti. Resta sulla tua macchina.",
     "ocr-cta": "Esegui OCR su un documento",
     "tools-cta": "Apri il catalogo strumenti",
+    "install-cta": "Installa",
+    "repo-cta": "Vedi su GitHub",
+    "lede": "Un toolkit per documenti, locale di default. OCR con un modello frontier, anonimizzatore PII integrato e 19 strumenti concatenabili, sulla tua macchina.",
+    "eyebrow": "Open source · MIT · Locale di default",
     "health-label": "Stato backend",
     "health-checking": "Verifica in corso…",
     "health-ok": "Online",
@@ -15,7 +19,71 @@
     "subsystem-ocr": "Motore OCR (Ollama)",
     "subsystem-anonymizer": "Anonimizzatore (OpenAI Privacy Filter)",
     "subsystem-ready": "pronto",
-    "subsystem-missing": "non installato"
+    "subsystem-missing": "non installato",
+    "what": {
+      "title": "Cos'è",
+      "items": [
+        {
+          "n": "01",
+          "title": "OCR locale",
+          "body": "Carica un PDF scansionato o una foto da telefono, vedi il Markdown emergere pagina per pagina via SSE. Il modello gira sul tuo hardware tramite Ollama; i byte non escono dalla macchina."
+        },
+        {
+          "n": "02",
+          "title": "Anonimizzatore PII",
+          "body": "OpenAI Privacy Filter, otto categorie di entità, testo verbatim. Si auto-installa al primo uso; gira su CPU. Inline in una chain o come step a sé."
+        },
+        {
+          "n": "03",
+          "title": "Strumenti concatenabili",
+          "body": "Diciannove strumenti cablati — split, merge, watermark, render, anonimizza, OCR, altro. Componili nel chain builder web, nella libreria Python, nella CLI o nel server MCP. Un solo codice, quattro superfici."
+        }
+      ]
+    },
+    "ai": {
+      "title": "Nominata, non magica",
+      "body": "Paperloom usa AI vera e dice quale. Niente glow, niente aura. L'OCR è GLM-OCR (rank #1 su OmniDocBench V1.5, 94.62). L'anonimizzatore è OpenAI Privacy Filter. Quando esce un modello open più forte, il pin Ollama si sposta e il precedente diventa opt-in.",
+      "model-label": "Modello OCR",
+      "model-name": "GLM-OCR",
+      "model-via": "via Ollama",
+      "benchmark-label": "OmniDocBench V1.5",
+      "benchmark-score": "94.62",
+      "benchmark-rank": "rank #1",
+      "anonymizer-label": "Anonimizzatore",
+      "anonymizer-name": "OpenAI Privacy Filter",
+      "anonymizer-license": "Apache 2.0"
+    },
+    "install": {
+      "title": "Tre vie d'ingresso",
+      "subtitle": "Scegli la superficie. Lo stesso backend gira sotto a tutte e tre.",
+      "mcp-label": "Server MCP (Claude, Cursor, Cline)",
+      "mcp-cmd": "uvx paperloom-mcp",
+      "lib-label": "Libreria Python + CLI",
+      "lib-cmd": "pip install paperloom",
+      "web-label": "Web app su localhost",
+      "web-cmd": "git clone … && pnpm install && pnpm dev",
+      "copy": "Copia",
+      "copied": "Copiato",
+      "copy-aria": "Copia comando {label}"
+    },
+    "not-for": {
+      "title": "Quando NON usare Paperloom",
+      "body": "Se l'input è già testo digitale (PDF nativi con vero text layer), usa",
+      "alt": "o uno script di 10 righe. Paperloom è sovra-ingegnerizzato per quel caso — 100× più lento, zero guadagno. Il valore vive nel percorso pixel-to-Markdown, nel post-processing concatenabile e nello storage con audit di privacy."
+    },
+    "footer": {
+      "repo": "GitHub",
+      "license": "Licenza MIT",
+      "docs": "Documentazione",
+      "version": "v0.1"
+    },
+    "landing-tools-banner": {
+      "eyebrow": "Anteprima statica",
+      "title": "Gli strumenti richiedono un'installazione locale",
+      "body": "Paperloom esegue OCR e anonimizzatore sulla tua macchina. Questa anteprima su GitHub Pages è statica e non può raggiungere un backend locale.",
+      "back": "Torna alla home",
+      "install": "Istruzioni di installazione"
+    }
   },
   "theme": {
     "label": "Tema",
@@ -32,7 +100,26 @@
     "scope-local": "locale",
     "scope-cloud": "cloud",
     "caveats": "Note",
-    "version": "paperloom v{version}"
+    "version": "paperloom v{version}",
+    "component": {
+      "ocr": "OCR",
+      "anonymizer": "Anonimizzatore"
+    },
+    "detail": {
+      "ocr": {
+        "ollama": "Ollama @ {url} ({model})",
+        "mistral": "Mistral {model} (modalità {mode}) — round-trip cloud",
+        "init_failed": "Avvio backend fallito: {error}",
+        "generic": "{provider}"
+      },
+      "anonymizer": {
+        "opf": "OpenAI Privacy Filter, eseguito localmente su CPU/GPU"
+      }
+    },
+    "caveat": {
+      "mcp_client": "Trasporto MCP: quando il client chiamante gira su un provider LLM cloud (Claude Desktop, Cursor, ChatGPT desktop, ecc.), input e output dei tool transitano dall'API di quel provider. paperloom elabora i dati localmente, ma l'agente che legge/scrive le chiamate tool è fuori dal confine di privacy di paperloom. Vedi doc/privacy.md.",
+      "cloud_active": "Componenti cloud attivi: {components}. Gli input a questi componenti lasciano la macchina."
+    }
   },
   "locale": {
     "label": "Lingua",
@@ -144,9 +231,9 @@
     "anonymize": {
       "non-en-warning": "Input non in inglese rilevato. OPF è ottimizzato per l'inglese; per migliore recall passa al preset {preset}.",
       "footer-license": "Motore di rilevamento: OpenAI Privacy Filter (Apache 2.0).",
-      "install-title": "L'anonimizzazione richiede OpenAI Privacy Filter",
-      "install-body": "OPF è il motore di detection. Non è installato di default perché richiede torch + transformers (~250 MB) e scarica un checkpoint del modello (~4 GB) al primo run in ~/.opf/privacy_filter. Tutto resta sulla tua macchina: nessun telemetry, nessun round-trip cloud.",
-      "install-cmd-label": "Esegui in un terminale dalla root del repo:",
+      "install-title": "Auto-install disabilitata — installa OpenAI Privacy Filter manualmente",
+      "install-body": "Normalmente OPF si auto-installa alla prima chiamata di anonimizzazione. Hai impostato PAPERLOOM_AUTO_INSTALL_OPF=0, quindi paperloom non lo installerà per te. OPF richiede torch + transformers (~250 MB) e scarica un checkpoint del modello (~4 GB) al primo run in ~/.opf/privacy_filter. Tutto resta sulla tua macchina: nessun telemetry, nessun round-trip cloud.",
+      "install-cmd-label": "Esegui in un terminale dentro il venv del backend:",
       "install-restart": "Riavvia <cmd></cmd> al termine dell'installazione.",
       "install-copy": "Copia comando",
       "install-copied": "Copiato",

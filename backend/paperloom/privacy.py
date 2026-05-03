@@ -31,15 +31,23 @@ class ComponentStatus(TypedDict):
     provider: str
     is_local: bool
     detail: str
+    detail_key: str
+    detail_params: dict[str, str]
+
+
+class Caveat(TypedDict):
+    text: str
+    key: str
+    params: dict[str, str]
 
 
 class PrivacyState(TypedDict):
     mode: Literal["local", "hybrid", "cloud"]
     components: list[ComponentStatus]
-    caveats: list[str]
+    caveats: list[Caveat]
 
 
-_MCP_CLIENT_CAVEAT = (
+_MCP_CLIENT_CAVEAT_TEXT = (
     "MCP transport: when the calling client runs on a cloud LLM provider "
     "(Claude Desktop, Cursor, ChatGPT desktop, etc.), tool inputs and "
     "outputs traverse that provider's API. paperloom processes data "
@@ -57,20 +65,33 @@ def _ocr_status() -> ComponentStatus:
             "provider": settings.ocr_provider or "ollama",
             "is_local": False,
             "detail": f"backend init failed: {exc}",
+            "detail_key": "detail.ocr.init_failed",
+            "detail_params": {"error": str(exc)},
         }
     detail = f"{backend.provider_name}"
+    detail_key = "detail.ocr.generic"
+    detail_params: dict[str, str] = {"provider": backend.provider_name}
     if backend.provider_name == "ollama":
         detail = f"ollama @ {settings.ollama_url} ({settings.ollama_model})"
+        detail_key = "detail.ocr.ollama"
+        detail_params = {"url": settings.ollama_url, "model": settings.ollama_model}
     elif backend.provider_name == "mistral":
         detail = (
             f"mistral {settings.mistral_ocr_model} ({settings.mistral_ocr_mode} mode) "
             f"— cloud round-trip"
         )
+        detail_key = "detail.ocr.mistral"
+        detail_params = {
+            "model": settings.mistral_ocr_model,
+            "mode": settings.mistral_ocr_mode,
+        }
     return {
         "name": "ocr",
         "provider": backend.provider_name,
         "is_local": backend.is_local,
         "detail": detail,
+        "detail_key": detail_key,
+        "detail_params": detail_params,
     }
 
 
@@ -81,6 +102,8 @@ def _anonymizer_status() -> ComponentStatus:
         "provider": "opf",
         "is_local": True,
         "detail": "OpenAI Privacy Filter, runs on CPU/GPU locally",
+        "detail_key": "detail.anonymizer.opf",
+        "detail_params": {},
     }
 
 
@@ -97,13 +120,22 @@ def current_state() -> PrivacyState:
     else:
         mode = "cloud"
 
-    caveats: list[str] = [_MCP_CLIENT_CAVEAT]
+    caveats: list[Caveat] = [
+        {"text": _MCP_CLIENT_CAVEAT_TEXT, "key": "caveat.mcp_client", "params": {}}
+    ]
     if mode != "local":
-        cloud_components = [c["name"] for c in components if not c["is_local"]]
+        cloud_names = [c["name"] for c in components if not c["is_local"]]
+        cloud_csv = ", ".join(cloud_names)
         caveats.insert(
             0,
-            f"Cloud components active: {', '.join(cloud_components)}. "
-            f"Inputs to these components leave the machine.",
+            {
+                "text": (
+                    f"Cloud components active: {cloud_csv}. "
+                    f"Inputs to these components leave the machine."
+                ),
+                "key": "caveat.cloud_active",
+                "params": {"components": cloud_csv},
+            },
         )
 
     return {"mode": mode, "components": components, "caveats": caveats}

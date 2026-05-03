@@ -5,6 +5,7 @@ import httpx
 from fastapi import APIRouter
 
 from paperloom._api import __version__
+from paperloom.anonymizer import _lazy_install
 from paperloom.config import settings
 from paperloom.privacy import current_state
 
@@ -29,6 +30,7 @@ async def health() -> dict[str, bool]:
     return {
         "ollama": await _ollama_up(),
         "opf": _opf_installed(),
+        "opf_auto_install": _lazy_install.auto_install_enabled(),
     }
 
 

@@ -55,6 +55,24 @@ Tighten the public-vs-private boundary by:
 - Adding `__all__` to every internal module so accidental re-exports stop landing as part of the public API.
 - A linting rule (or test) that fails CI when something imports from `paperloom.<internal_module>` outside paperloom itself.
 
+## Mistral cloud-OCR — real API verification
+
+The Mistral backend (`paperloom/ocr/backends/mistral.py`) is exercised in tests via the stub backend, and verified at the integration level for:
+
+- **Privacy detection** — `OCR_PROVIDER=mistral MISTRAL_API_KEY=... paperloom status` flips the badge to `hybrid` and adds the cloud-egress caveat.
+- **Error path** — fake key returns `mistral ocr 401: Unauthorized` and the SSE stream surfaces it as a structured error event in both CLI and web UI.
+
+Not yet verified end-to-end: a real key + budget round-trip on `https://api.mistral.ai/v1/ocr` returning sensible markdown. Steps when budget is allocated:
+
+```bash
+OCR_PROVIDER=mistral MISTRAL_API_KEY=sk-... \
+  paperloom ocr ~/small.pdf -o /tmp/mistral-out.md
+```
+
+Verify: exit 0, output markdown plausible against the PDF, `paperloom status --json` shows `mode: "hybrid"`. If the response shape diverges from `{pages:[{markdown,index|page_number}]}`, the parser in `_call_ocr_full` needs widening — that's the most likely breakpoint.
+
+Low risk: the stub-backend test matrix and the fake-key error path together cover everything except wire-format drift. Defer until a paying user or a paperloom maintainer with credits validates it.
+
 ## Tests + benchmarks
 
 - **Real benchmark fixtures.** `backend/tests/bench/fixtures/` is empty. Drop in 10-20 license-clean PDFs across the categories listed in the bench README, populate `*.expected.md`, and run `python tests/bench/run.py --all` to publish the comparison table.
@@ -72,6 +90,15 @@ Tighten the public-vs-private boundary by:
 - **Settings page** to switch OCR provider without restarting the backend (today: env var + restart).
 - **Privacy mode banner** when the user uploads a file under `hybrid` or `cloud` mode — a one-time confirmation so they don't accidentally send PII to a cloud provider.
 - **History panel** of past jobs, per file, with the privacy mode active when they ran. Helpful for audits.
+- **Text-layer detection banner on `/tools/ocr-to-markdown`.** When the uploaded PDF already has a usable text layer, surface a one-time hint suggesting `pdf-to-text` instead of OCR — same source, faster, no model errors. Implementation: new endpoint `GET /api/files/{id}/inspect` returning `{has_text_layer, char_density, sampled_pages}` (pypdf-based, sample first ~3 pages, threshold ~100 chars/page on >70% of samples). FE shows a dismissable card linking to `/tools/chain?initial=pdf-to-text&from=<file_id>`. Real example that motivated this: digital PDF where vision OCR misread a 10-digit phone number as 9 digits — text layer would have been exact.
+- **Min-duration on `installing_opf` phase indicator.** When `uv` already has a wheel cached, OPF re-install completes in ~2 seconds — the `node.progress` event with `phase: "installing_opf"` flashes too briefly for the user to register. FE should hold the indicator for at least ~800 ms after the event, even if the next phase event arrives sooner. Same pattern useful for any short-lived progress phase. File: `web/components/anonymize/anonymize-tool.tsx` (and chain timeline equivalent).
+- **Re-poll `/api/health` after a successful run.** The OPF install banner is alimented by `/api/health` on mount only. If OPF auto-installs during a run, the banner stays stale until the user clicks "re-check" or reloads. Trigger a refresh on `done` SSE events when the relevant subsystem (OPF for anonymize, Ollama for OCR) might have changed state. Probably the cleanest fix is a small `useHealth()` hook with a refresh callback the SSE handlers can invoke.
+
+## Smart routing — `pdf-to-markdown`
+
+A single entry point that chooses per-page between deterministic text-layer extraction and vision OCR (Marker/Docling-style). Internal flow: for each page, check char density of the text layer; over threshold → `pdf-to-text` path; under → OCR pipeline. Output unified as a single markdown stream. Naming-honest replacement of `ocr-to-markdown` for mixed digital/scanned PDFs.
+
+Defer until: (a) the inspect endpoint and detection banner have shipped and we have real signal on how often users land on the wrong tool; (b) at least one paying or external user asks for it. Premature otherwise — the explicit two-tool flow (`pdf-to-text` vs `ocr-to-markdown`) is honest and easy to reason about for v0.x.
 
 ## Closed questions (decisions logged)
 

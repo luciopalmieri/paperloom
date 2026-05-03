@@ -226,7 +226,23 @@ export function OcrTool() {
         esRef.current = null;
       });
 
-      es.addEventListener("error", () => {
+      es.addEventListener("error", (ev) => {
+        const me = ev as MessageEvent;
+        if (typeof me.data === "string" && me.data.length > 0) {
+          let message = t("error-generic");
+          try {
+            const data = JSON.parse(me.data) as { code?: string; message?: string };
+            message = data.message ?? data.code ?? message;
+          } catch {
+            // generic
+          }
+          setState((s) =>
+            s.status === "cancelled" ? s : { ...s, status: "error", error: message },
+          );
+          es.close();
+          esRef.current = null;
+          return;
+        }
         if (es.readyState === EventSource.CLOSED) {
           setState((s) =>
             s.status === "cancelled"

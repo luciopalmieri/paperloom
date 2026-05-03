@@ -30,7 +30,36 @@ from paperloom import (
 from paperloom.config import settings
 
 
+def _preflight_output(path: str, force: bool) -> str | None:
+    """Validate output path before heavy work. Returns error message or None."""
+    p = Path(path).expanduser()
+    parent = p.parent if str(p.parent) else Path(".")
+    if not parent.is_dir():
+        return f"output dir does not exist: {parent}"
+    import os as _os
+    if not _os.access(parent, _os.W_OK):
+        return f"output dir not writable: {parent}"
+    if p.exists() and not force:
+        return f"refusing to overwrite {p} (use --force to override)"
+    return None
+
+
+def _write_output(path: str, data: str) -> int:
+    try:
+        Path(path).write_text(data, encoding="utf-8")
+    except OSError as exc:
+        print(f"error: cannot write {path}: {exc.strerror or exc}", file=sys.stderr)
+        return 1
+    print(f"wrote {path} ({len(data)} chars)")
+    return 0
+
+
 def _cmd_ocr(args: argparse.Namespace) -> int:
+    if args.output:
+        msg = _preflight_output(args.output, args.force)
+        if msg:
+            print(f"error: {msg}", file=sys.stderr)
+            return 1
     try:
         md = ocr_to_markdown(
             args.input,
@@ -42,24 +71,25 @@ def _cmd_ocr(args: argparse.Namespace) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     if args.output:
-        Path(args.output).write_text(md, encoding="utf-8")
-        print(f"wrote {args.output} ({len(md)} chars)")
-    else:
-        sys.stdout.write(md)
+        return _write_output(args.output, md)
+    sys.stdout.write(md)
     return 0
 
 
 def _cmd_anonymize(args: argparse.Namespace) -> int:
+    if args.output:
+        msg = _preflight_output(args.output, args.force)
+        if msg:
+            print(f"error: {msg}", file=sys.stderr)
+            return 1
     try:
         clean = anonymize(args.input, preset=args.preset)
     except PaperloomError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     if args.output:
-        Path(args.output).write_text(clean, encoding="utf-8")
-        print(f"wrote {args.output} ({len(clean)} chars)")
-    else:
-        sys.stdout.write(clean)
+        return _write_output(args.output, clean)
+    sys.stdout.write(clean)
     return 0
 
 
@@ -170,7 +200,7 @@ def _cmd_doctor(_: argparse.Namespace) -> int:
         flag = "local" if c["is_local"] else "CLOUD"
         print(f"    - {c['name']}: {c['provider']} [{flag}] — {c['detail']}")
     for caveat in state["caveats"]:
-        print(f"    ! {caveat}")
+        print(f"    ! {caveat['text']}")
     print()
 
     checks = [
@@ -217,7 +247,7 @@ def _cmd_status(args: argparse.Namespace) -> int:
         print(f"  - {c['name']}: {c['provider']} [{flag}] — {c['detail']}")
     print()
     for caveat in state["caveats"]:
-        print(f"  ! {caveat}")
+        print(f"  ! {caveat['text']}")
     return 0
 
 
@@ -229,6 +259,9 @@ def main(argv: list[str] | None = None) -> int:
     p_ocr = sub.add_parser("ocr", help="OCR a PDF or image to Markdown")
     p_ocr.add_argument("input")
     p_ocr.add_argument("-o", "--output")
+    p_ocr.add_argument(
+        "-f", "--force", action="store_true", help="overwrite output if it exists"
+    )
     p_ocr.add_argument("--pages", help='page spec, e.g. "1,3-5"')
     p_ocr.add_argument("--include-images", action="store_true")
     p_ocr.add_argument(
@@ -239,6 +272,9 @@ def main(argv: list[str] | None = None) -> int:
     p_anon = sub.add_parser("anonymize", help="Redact PII from a markdown/text file")
     p_anon.add_argument("input")
     p_anon.add_argument("-o", "--output")
+    p_anon.add_argument(
+        "-f", "--force", action="store_true", help="overwrite output if it exists"
+    )
     p_anon.add_argument(
         "--preset", choices=["balanced", "recall", "precision"], default="balanced"
     )

@@ -8,6 +8,10 @@
     "subheading": "Intelligence for your documents. Stays on your machine.",
     "ocr-cta": "OCR a document",
     "tools-cta": "Open the tool catalogue",
+    "install-cta": "Install",
+    "repo-cta": "View on GitHub",
+    "lede": "A local-first document toolkit. Frontier-model OCR, a built-in PII anonymizer, and 19 chainable tools, on your machine by default.",
+    "eyebrow": "Open source · MIT · Local-first",
     "health-label": "Backend health",
     "health-checking": "Checking…",
     "health-ok": "Online",
@@ -15,7 +19,71 @@
     "subsystem-ocr": "OCR engine (Ollama)",
     "subsystem-anonymizer": "Anonymizer (OpenAI Privacy Filter)",
     "subsystem-ready": "ready",
-    "subsystem-missing": "not installed"
+    "subsystem-missing": "not installed",
+    "what": {
+      "title": "What it is",
+      "items": [
+        {
+          "n": "01",
+          "title": "Local OCR",
+          "body": "Drop a scanned PDF or a phone photo, watch Markdown emit page by page over SSE. The model runs on your hardware via Ollama; bytes do not leave the box."
+        },
+        {
+          "n": "02",
+          "title": "PII anonymizer",
+          "body": "OpenAI Privacy Filter, eight entity categories, verbatim. Auto-installs on first call; runs on CPU. Use it inline in a chain or as a standalone step."
+        },
+        {
+          "n": "03",
+          "title": "Chainable tools",
+          "body": "Nineteen wired tools — split, merge, watermark, render, anonymize, OCR, more. Compose them in the web chain builder, the Python library, the CLI, or the MCP server. One codebase, four surfaces."
+        }
+      ]
+    },
+    "ai": {
+      "title": "Named, not magical",
+      "body": "Paperloom uses real AI and tells you which. No glow, no aura. The OCR runs GLM-OCR (rank #1 on OmniDocBench V1.5, 94.62). The anonymizer runs OpenAI Privacy Filter. When a stronger open model ships, the Ollama pin moves and the older one becomes opt-in.",
+      "model-label": "OCR model",
+      "model-name": "GLM-OCR",
+      "model-via": "via Ollama",
+      "benchmark-label": "OmniDocBench V1.5",
+      "benchmark-score": "94.62",
+      "benchmark-rank": "rank #1",
+      "anonymizer-label": "Anonymizer",
+      "anonymizer-name": "OpenAI Privacy Filter",
+      "anonymizer-license": "Apache 2.0"
+    },
+    "install": {
+      "title": "Three ways in",
+      "subtitle": "Pick the surface. The same backend ships behind all of them.",
+      "mcp-label": "MCP server (Claude, Cursor, Cline)",
+      "mcp-cmd": "uvx paperloom-mcp",
+      "lib-label": "Python library + CLI",
+      "lib-cmd": "pip install paperloom",
+      "web-label": "Web app on localhost",
+      "web-cmd": "git clone … && pnpm install && pnpm dev",
+      "copy": "Copy",
+      "copied": "Copied",
+      "copy-aria": "Copy {label} command"
+    },
+    "not-for": {
+      "title": "When NOT to use Paperloom",
+      "body": "If your input is already-digital text (born-digital PDFs with a real text layer), use",
+      "alt": "or a 10-line script. Paperloom is over-engineered for that — 100× slower, no gain. Its value lives in the pixel-to-Markdown path, the chainable post-processing, and the privacy-audited storage."
+    },
+    "footer": {
+      "repo": "GitHub",
+      "license": "MIT license",
+      "docs": "Documentation",
+      "version": "v0.1"
+    },
+    "landing-tools-banner": {
+      "eyebrow": "Static preview",
+      "title": "Tools require a local install",
+      "body": "Paperloom runs OCR and the anonymizer on your machine. This GitHub Pages preview is static and cannot reach a local backend.",
+      "back": "Back to home",
+      "install": "Install instructions"
+    }
   },
   "theme": {
     "label": "Theme",
@@ -32,7 +100,26 @@
     "scope-local": "local",
     "scope-cloud": "cloud",
     "caveats": "Caveats",
-    "version": "paperloom v{version}"
+    "version": "paperloom v{version}",
+    "component": {
+      "ocr": "OCR",
+      "anonymizer": "Anonymizer"
+    },
+    "detail": {
+      "ocr": {
+        "ollama": "Ollama @ {url} ({model})",
+        "mistral": "Mistral {model} ({mode} mode) — cloud round-trip",
+        "init_failed": "Backend init failed: {error}",
+        "generic": "{provider}"
+      },
+      "anonymizer": {
+        "opf": "OpenAI Privacy Filter, runs locally on CPU/GPU"
+      }
+    },
+    "caveat": {
+      "mcp_client": "MCP transport: when the calling client runs on a cloud LLM provider (Claude Desktop, Cursor, ChatGPT desktop, etc.), tool inputs and outputs traverse that provider's API. paperloom processes data locally, but the agent reading/writing the tool calls is outside paperloom's privacy boundary. See doc/privacy.md.",
+      "cloud_active": "Cloud components active: {components}. Inputs to these components leave the machine."
+    }
   },
   "locale": {
     "label": "Language",
@@ -144,9 +231,9 @@
     "anonymize": {
       "non-en-warning": "Non-English input detected. OPF is English-primary; consider switching the preset to {preset} for better recall.",
       "footer-license": "Detection engine: OpenAI Privacy Filter (Apache 2.0).",
-      "install-title": "Anonymizer needs OpenAI Privacy Filter",
-      "install-body": "OPF is the detection engine. It is not installed by default because it pulls in torch + transformers (~250 MB) and downloads a model checkpoint (~4 GB) on first run into ~/.opf/privacy_filter. Everything stays on your machine: no telemetry, no cloud round-trips.",
-      "install-cmd-label": "Run this in a terminal at the repo root:",
+      "install-title": "Auto-install disabled — install OpenAI Privacy Filter manually",
+      "install-body": "OPF normally auto-installs on the first anonymize call. You set PAPERLOOM_AUTO_INSTALL_OPF=0, so paperloom will not install it for you. OPF pulls in torch + transformers (~250 MB) and downloads a model checkpoint (~4 GB) on first run into ~/.opf/privacy_filter. Everything stays on your machine: no telemetry, no cloud round-trips.",
+      "install-cmd-label": "Run this in a terminal inside the backend venv:",
       "install-restart": "Restart <cmd></cmd> after the install completes.",
       "install-copy": "Copy command",
       "install-copied": "Copied",
