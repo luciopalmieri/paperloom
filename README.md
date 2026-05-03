@@ -70,6 +70,8 @@ Disk: ~5 GB for the GLM-OCR model + ~4 GB for the OPF anonymizer checkpoint when
 
 All three share the same backend code. See [`doc/distribution.md`](doc/distribution.md) for full details.
 
+> **Promo video?** A self-contained Remotion project lives in [`video-promo/`](video-promo/) for rendering a 15-second demo (used in talks and the README hero). Independent install, deletable without affecting the main project. See [`video-promo/README.md`](video-promo/README.md).
+
 ---
 
 ## Quick start
