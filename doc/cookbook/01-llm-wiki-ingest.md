@@ -2,7 +2,9 @@
 
 Pattern from [Andrej Karpathy's LLM Wiki gist](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). The idea: an agent maintains a persistent Markdown wiki on your disk that grows over time. New sources get ingested into wiki pages with frontmatter metadata; old pages get cross-linked and refined.
 
-paperloom solves the **ingest** step for sources that aren't already text — scanned PDFs, phone photos of whiteboards, fotographed pages of books. Without paperloom, an LLM agent can ingest only digital text. With paperloom, anything you can scan or photograph becomes a wiki page.
+paperloom solves the **ingest** step for sources that aren't already text — scanned PDFs, phone photos of whiteboards, photographed pages of books. Without paperloom, an LLM agent can ingest only digital text. With paperloom, anything you can scan or photograph becomes a wiki page.
+
+> **Going big?** If your inbox is hundreds or thousands of phone photos / scanned pages, jump straight to [`10-photo-batch-to-wiki.md`](10-photo-batch-to-wiki.md) for a resumable batch script. This recipe stays focused on the conceptual pattern and the three driving paths.
 
 ## Wiki layout (target)
 

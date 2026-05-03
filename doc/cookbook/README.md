@@ -13,3 +13,4 @@ Copy-paste recipes. Each one is short and assumes you've already run `ollama pul
 | 07 | [`07-redact-medical.md`](07-redact-medical.md) | Batch-redact PII from a folder of `.md` notes via OPF. |
 | 08 | [`08-langchain-tool.md`](08-langchain-tool.md) | Wrap paperloom calls as LangChain tools. |
 | 09 | [`09-remote-agno-cloud-ocr.md`](09-remote-agno-cloud-ocr.md) | Remote Agno server with Mistral cloud OCR. Privacy implications. |
+| 10 | [`10-photo-batch-to-wiki.md`](10-photo-batch-to-wiki.md) | Batch-ingest 1000+ phone photos / scans into the LLM Wiki. Resumable, streaming, privacy-audited. |

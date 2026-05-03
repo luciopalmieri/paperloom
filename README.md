@@ -29,6 +29,16 @@ The orchestration layer:
 
 **Pick the others when:** raw OCR quality on complex layouts (math, tables, multi-column scientific PDFs) is the only thing that matters. Run our [benchmarks](./doc/benchmarks.md) on your own corpus before deciding.
 
+### Where paperloom shines
+
+paperloom is over-engineered for ingesting already-digital PDFs — for those, `pdftotext` and a 10-line script will do. The orchestration, streaming, and privacy primitives earn their keep in three concrete scenarios:
+
+- **LLM Wiki / personal knowledge base from pixels.** [Karpathy's LLM Wiki pattern](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) assumes an agent maintains a Markdown wiki on disk. Plain agents can only ingest text. With paperloom, anything you can photograph or scan — books, notebooks, whiteboards, paper archives — becomes a wiki page with audited provenance. See cookbooks [`01`](doc/cookbook/01-llm-wiki-ingest.md) (the pattern) and [`10`](doc/cookbook/10-photo-batch-to-wiki.md) (1000+ phone photos at once).
+- **Bulk scanned / photographed documents.** Hundreds-to-thousands of phone photos or flatbed scans of a corpus you own (textbooks, manuals, legal binders, family archives). The batch script in cookbook [`10`](doc/cookbook/10-photo-batch-to-wiki.md) is resumable — a crash on page 800 of 1500 doesn't lose the first 800. The frontmatter records `ocr_provider` and `privacy_mode` so you can audit later which pages stayed local.
+- **Bulky manuals and long documents.** A 400-page workshop manual or a multi-volume textbook is exactly where streaming OCR pays off. Markdown emerges page by page over SSE — you can sanity-check early pages while the tail still runs, and the per-page emission means a mid-run failure costs you a single page rather than a whole job. See [`05-scan-clean-pdf.md`](doc/cookbook/05-scan-clean-pdf.md) for the chain pattern, [`10-photo-batch-to-wiki.md`](doc/cookbook/10-photo-batch-to-wiki.md) for resumable batch ingest.
+
+If your inputs are already-digital text, prefer `paperloom.tools.pdf_to_text` (or plain `pdftotext`) — it's 100× faster and 100% accurate. paperloom's value lives in the pixel-to-Markdown path, the chainable post-processing, and the privacy-audited storage.
+
 > **Local-first, with cloud opt-in.** OCR runs on Ollama by default (everything on your machine). Need a cloud OCR provider? Set `OCR_PROVIDER=mistral` for Mistral Document AI — paperloom flips to "hybrid" privacy mode and the web UI badge turns amber so you always see when bytes leave your box. The MCP server prints the same banner on stderr at startup. Full breakdown in [`doc/privacy.md`](doc/privacy.md).
 
 ---
@@ -227,7 +237,8 @@ The repo is a pnpm workspace: web app in `web/`, FastAPI backend (and the Python
   [merge invoices](doc/cookbook/06-batch-merge-invoices.md),
   [redact medical notes](doc/cookbook/07-redact-medical.md),
   [LangChain tool](doc/cookbook/08-langchain-tool.md),
-  [remote Agno + cloud OCR](doc/cookbook/09-remote-agno-cloud-ocr.md).
+  [remote Agno + cloud OCR](doc/cookbook/09-remote-agno-cloud-ocr.md),
+  [batch phone photos → wiki](doc/cookbook/10-photo-batch-to-wiki.md).
 - [`doc/benchmarks.md`](doc/benchmarks.md) — paperloom vs. marker vs. docling on a fixed corpus.
 - [`doc/roadmap.md`](doc/roadmap.md) — planned work (more OCR providers, audit log, MCP resources/prompts).
 - [`doc/rules/`](doc/rules/) — coding/UI conventions:
