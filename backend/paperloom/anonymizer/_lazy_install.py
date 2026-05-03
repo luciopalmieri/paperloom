@@ -1,12 +1,13 @@
 """On-demand install of the OPF anonymizer.
 
-Triggered the first time `anonymize` runs without `opf` importable. Keeps
-the default `pip install paperloom` payload small while still letting the
-chain `... → anonymize` Just Work — at the cost of a one-time install pause
-the first time a user touches PII redaction.
+OPF is distributed only as a git repo (no PyPI wheel), so it cannot ship
+as a regular `paperloom[anonymizer]` extra — pip refuses direct-URL deps
+in published wheels. Instead we install it from git on first use and
+keep the default `pip install paperloom` payload small.
 
-Disable via env var `PAPERLOOM_AUTO_INSTALL_OPF=0` if you want the explicit
-two-step flow (`pip install paperloom[anonymizer]`).
+Disable via `PAPERLOOM_AUTO_INSTALL_OPF=0` and install manually:
+
+    uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'
 """
 
 from __future__ import annotations
@@ -50,7 +51,10 @@ def install_opf(emit: Callable[[str], None] | None = None) -> bool:
     argv = _installer_argv()
     if argv is None:
         if emit:
-            emit("no installer found (uv or pip); install manually: pip install paperloom[anonymizer]")
+            emit(
+                "no installer found (uv or pip); install manually: "
+                "uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'"
+            )
         return False
     if emit:
         emit(f"installing OPF via: {' '.join(argv)}")

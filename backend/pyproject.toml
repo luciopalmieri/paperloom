@@ -46,12 +46,17 @@ dependencies = [
 # WeasyPrint needs native libs (pango/cairo). Opt-in to avoid surprising
 # `uvx paperloom` users who only need OCR.
 pdf = ["weasyprint>=68.1"]
-# OPF anonymizer — torch + transformers + ~4 GB checkpoint. Opt-in.
-anonymizer = ["opf"]
-# All extras (web UI / dev convenience). Note: cloud OCR providers
-# (Mistral, OpenAI, Anthropic) use raw httpx and do not need extras —
-# they only require the matching API key in env (e.g. MISTRAL_API_KEY).
-all = ["weasyprint>=68.1", "opf"]
+# Cloud OCR providers (Mistral, OpenAI, Anthropic) use raw httpx and do
+# not need extras — they only require the matching API key in env
+# (e.g. MISTRAL_API_KEY).
+#
+# OPF anonymizer is intentionally NOT a PyPI extra: the package is
+# distributed only as a git repo (no PyPI wheel). The `anonymize` tool
+# auto-installs it on first call via `uv pip install` (see
+# paperloom/anonymizer/_lazy_install.py). Disable with
+# PAPERLOOM_AUTO_INSTALL_OPF=0 if you prefer the explicit flow:
+#     uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'
+all = ["weasyprint>=68.1"]
 
 [project.scripts]
 paperloom = "paperloom.cli:main"
@@ -62,9 +67,6 @@ Homepage = "https://github.com/luciopalmieri/paperloom"
 Repository = "https://github.com/luciopalmieri/paperloom"
 Issues = "https://github.com/luciopalmieri/paperloom/issues"
 Documentation = "https://github.com/luciopalmieri/paperloom/tree/main/doc"
-
-[tool.uv.sources]
-opf = { git = "https://github.com/openai/privacy-filter.git", rev = "main" }
 
 [dependency-groups]
 dev = [

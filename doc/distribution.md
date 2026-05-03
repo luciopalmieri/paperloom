@@ -19,13 +19,17 @@ Single package. `paperloom` script + `paperloom-mcp` script land in `$VENV/bin/`
 ```
 paperloom                  # core: OCR, PDF tools, MCP server  (~50 MB after deps)
 paperloom[pdf]             # + WeasyPrint (markdown→pdf, html→pdf)
-paperloom[anonymizer]      # + OPF (PII redaction)             (~250 MB Python deps + ~4 GB model on first use)
-paperloom[all]             # everything
+paperloom[all]             # everything published on PyPI
 ```
 
-`paperloom[anonymizer]` is the heavyweight — pulled torch + transformers + a one-time 4 GB model checkpoint. The `anonymize` tool also auto-installs OPF on first call (configurable via `PAPERLOOM_AUTO_INSTALL_OPF=0`), so most users never need to choose the extra explicitly.
-
 `paperloom[pdf]` needs native libs: `brew install pango` (macOS) or `apt install libpango-1.0-0 libpangoft2-1.0-0` (Linux).
+
+**OPF anonymizer is intentionally NOT a PyPI extra.** It ships only as a git repo (no PyPI wheel), and PEP 658 / pip rules forbid wheels from declaring direct-URL dependencies. paperloom auto-installs it on the first `anonymize` call (~250 MB Python deps + ~4 GB model checkpoint), so most users never have to think about it. To opt out and install manually:
+
+```bash
+PAPERLOOM_AUTO_INSTALL_OPF=0  # disable the auto-installer
+uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'
+```
 
 ### Claude Code plugin: `.claude-plugin/`
 

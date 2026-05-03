@@ -176,7 +176,8 @@ if __name__ == "__main__":
 ```bash
 ollama pull glm-ocr:latest                       # one-time, ~5 GB
 pip install paperloom                            # core
-# pip install 'paperloom[anonymizer]'            # only if ANONYMIZE = True
+# OPF auto-installs on first `anonymize` call when ANONYMIZE = True;
+# set PAPERLOOM_AUTO_INSTALL_OPF=0 if you'd rather install it yourself.
 mkdir -p ~/wiki/_inbox/manuale-officina-fiat-126
 # drop photos in there, named so lexicographic = page order
 python ingest_photos.py

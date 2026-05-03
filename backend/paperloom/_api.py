@@ -144,7 +144,9 @@ def anonymize(
     `text_or_path` can be either a path to a `.md`/`.txt` file or the
     text itself (auto-detected: a path that exists is treated as a file).
     `preset` is one of `balanced|recall|precision`. Returns the redacted
-    text. Requires the `anonymizer` extra (`pip install paperloom[anonymizer]`).
+    text. OPF auto-installs on first call (set
+    PAPERLOOM_AUTO_INSTALL_OPF=0 to disable; install manually with
+    `uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'`).
     """
     candidate = Path(str(text_or_path)).expanduser()
     cleanup: Path | None = None

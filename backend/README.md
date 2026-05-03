@@ -28,11 +28,17 @@ uvx --with 'paperloom[all]' paperloom doctor
 # Or pip:
 pip install paperloom            # core
 pip install 'paperloom[pdf]'     # + WeasyPrint (markdown→pdf, html→pdf)
-pip install 'paperloom[anonymizer]'  # + OPF (anonymize tool)
-pip install 'paperloom[all]'     # everything
+pip install 'paperloom[all]'     # everything published on PyPI
 ```
 
-`pdf` extra needs native libs (`brew install pango` on macOS). `anonymizer` extra downloads a ~4 GB model checkpoint to `~/.opf/privacy_filter` on first use.
+`pdf` extra needs native libs (`brew install pango` on macOS).
+
+The OPF anonymizer is **not** a PyPI extra — it's distributed as a git repo. The `anonymize` tool auto-installs it on first call (~250 MB Python deps + ~4 GB checkpoint). To opt out and install manually:
+
+```bash
+PAPERLOOM_AUTO_INSTALL_OPF=0  # disables the auto-installer
+uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'
+```
 
 ## Use as a library
 

@@ -121,7 +121,11 @@ async def run(
                 yield "error", {
                     "job_id": job_id,
                     "code": "opf_install_failed",
-                    "message": "auto-install failed; run `pip install paperloom[anonymizer]` manually",
+                    "message": (
+                        "auto-install failed; run "
+                        "`uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'` "
+                        "manually."
+                    ),
                     "log_tail": install_lines[-20:],
                     "recoverable": False,
                 }

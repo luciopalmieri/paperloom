@@ -133,7 +133,12 @@ def _check_ollama() -> tuple[bool, str]:
 
 def _check_opf() -> tuple[bool, str]:
     if util.find_spec("opf") is None:
-        return False, "OPF not installed — `pip install paperloom[anonymizer]` for the anonymize tool"
+        return (
+            False,
+            "OPF not installed — auto-installs on first `anonymize` call, "
+            "or install manually: "
+            "`uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'`",
+        )
     return True, "OPF installed"
 
 

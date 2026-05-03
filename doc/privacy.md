@@ -113,7 +113,7 @@ A. Yes. In `batch` mode the entire PDF is sent. In `per_page` mode each rendered
 A. Yes, and we recommend it for high-sensitivity workflows. paperloom in default config does not need any outbound traffic except localhost (Ollama on 11434). Block everything else with your firewall and the only failure mode is "you tried to set `OCR_PROVIDER=mistral` and it errored at the request" — which is the desired behavior.
 
 **Q. Does the auto-installer for OPF leak any data?**
-A. The installer fetches code and weights from GitHub / Hugging Face on first use. After install, OPF runs offline. If your environment forbids that one-time fetch, install OPF manually via `pip install paperloom[anonymizer]` from a vetted mirror, then the runtime is fully offline.
+A. The installer fetches code and weights from GitHub / Hugging Face on first use. After install, OPF runs offline. If your environment forbids that one-time fetch, install OPF manually via `uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'` from a vetted mirror, then the runtime is fully offline. Set `PAPERLOOM_AUTO_INSTALL_OPF=0` to suppress the auto-installer.
 
 **Q. Is there logging? Telemetry?**
 A. No telemetry. paperloom emits structured logs via Python's `logging` to stderr; nothing leaves the machine unless your OS-level log shipper is configured to forward stderr.

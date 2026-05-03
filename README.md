@@ -113,8 +113,13 @@ Bundles the MCP server config + `/paperloom-ocr`, `/paperloom-anonymize`, `/pape
 ```bash
 pip install paperloom            # core (OCR, PDF tools, MCP server)
 pip install 'paperloom[pdf]'     # + WeasyPrint for markdown→pdf, html→pdf
-pip install 'paperloom[anonymizer]'  # + OPF for PII redaction
-pip install 'paperloom[all]'     # everything
+pip install 'paperloom[all]'     # everything published on PyPI
+```
+
+The OPF anonymizer is **not** a PyPI extra — it's distributed as a git repo. paperloom auto-installs it on the first `anonymize` call (~250 MB Python deps + ~4 GB checkpoint). Disable the auto-installer with `PAPERLOOM_AUTO_INSTALL_OPF=0` and run it yourself:
+
+```bash
+uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'
 ```
 
 ```python
@@ -241,6 +246,7 @@ The repo is a pnpm workspace: web app in `web/`, FastAPI backend (and the Python
   [batch phone photos → wiki](doc/cookbook/10-photo-batch-to-wiki.md).
 - [`doc/benchmarks.md`](doc/benchmarks.md) — paperloom vs. marker vs. docling on a fixed corpus.
 - [`doc/roadmap.md`](doc/roadmap.md) — planned work (more OCR providers, audit log, MCP resources/prompts).
+- [`doc/release-checklist.md`](doc/release-checklist.md) — pre-publish runbook (Tier 1 automatable / Tier 2 manual / Tier 3 TestPyPI).
 - [`doc/rules/`](doc/rules/) — coding/UI conventions:
   [`anonymizer`](doc/rules/anonymizer.md),
   [`a11y`](doc/rules/a11y.md),
