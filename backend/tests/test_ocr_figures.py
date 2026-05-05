@@ -4,7 +4,7 @@ from pathlib import Path
 import pypdfium2 as pdfium
 from PIL import Image
 
-from src.ocr import figures
+from paperloom.ocr import figures
 
 
 def _png_bytes(w: int = 800, h: int = 1000, color=(200, 200, 200)) -> bytes:
@@ -201,7 +201,7 @@ def test_extract_image_objects_blank_page_returns_empty(tmp_path: Path) -> None:
 
 
 def _finalize(**kw):
-    from src.ocr.pipeline import _finalize_page_markdown
+    from paperloom.ocr.pipeline import _finalize_page_markdown
 
     return _finalize_page_markdown(**kw)
 

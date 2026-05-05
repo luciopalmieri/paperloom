@@ -104,7 +104,7 @@ export function CatalogueGrid({ sections, opfReady }: Props) {
       ) : (
         filtered.map((section) => (
           <section key={section.key} className="flex flex-col gap-3">
-            <h2 className="text-sm font-medium tracking-tight">
+            <h2 className="text-base font-semibold tracking-tight">
               {tCat(sectionLabelKey[section.key])}
             </h2>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

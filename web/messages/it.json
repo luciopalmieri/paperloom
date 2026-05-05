@@ -8,6 +8,10 @@
     "subheading": "Intelligenza per i tuoi documenti. Resta sulla tua macchina.",
     "ocr-cta": "Esegui OCR su un documento",
     "tools-cta": "Apri il catalogo strumenti",
+    "install-cta": "Installa",
+    "repo-cta": "Vedi su GitHub",
+    "lede": "Un toolkit per documenti, locale di default. OCR con un modello frontier, anonimizzatore PII integrato e 19 strumenti concatenabili, sulla tua macchina.",
+    "eyebrow": "Open source · MIT · Locale di default",
     "health-label": "Stato backend",
     "health-checking": "Verifica in corso…",
     "health-ok": "Online",
@@ -15,13 +19,109 @@
     "subsystem-ocr": "Motore OCR (Ollama)",
     "subsystem-anonymizer": "Anonimizzatore (OpenAI Privacy Filter)",
     "subsystem-ready": "pronto",
-    "subsystem-missing": "non installato"
+    "subsystem-missing": "non installato",
+    "what": {
+      "title": "Cos'è",
+      "items": [
+        {
+          "n": "01",
+          "title": "OCR locale",
+          "body": "Carica un PDF scansionato o una foto da telefono, vedi il Markdown emergere pagina per pagina via SSE. Il modello gira sul tuo hardware tramite Ollama; i byte non escono dalla macchina."
+        },
+        {
+          "n": "02",
+          "title": "Anonimizzatore PII",
+          "body": "OpenAI Privacy Filter, otto categorie di entità, testo verbatim. Si auto-installa al primo uso; gira su CPU. Inline in una chain o come step a sé."
+        },
+        {
+          "n": "03",
+          "title": "Strumenti concatenabili",
+          "body": "Diciannove strumenti cablati — split, merge, watermark, render, anonimizza, OCR, altro. Componili nel chain builder web, nella libreria Python, nella CLI o nel server MCP. Un solo codice, quattro superfici."
+        }
+      ]
+    },
+    "ai": {
+      "title": "Nominata, non magica",
+      "body": "Paperloom usa AI vera e dice quale. Niente glow, niente aura. L'OCR è GLM-OCR (rank #1 su OmniDocBench V1.5, 94.62). L'anonimizzatore è OpenAI Privacy Filter. Quando esce un modello open più forte, il pin Ollama si sposta e il precedente diventa opt-in.",
+      "model-label": "Modello OCR",
+      "model-name": "GLM-OCR",
+      "model-via": "via Ollama",
+      "benchmark-label": "OmniDocBench V1.5",
+      "benchmark-score": "94.62",
+      "benchmark-rank": "rank #1",
+      "anonymizer-label": "Anonimizzatore",
+      "anonymizer-name": "OpenAI Privacy Filter",
+      "anonymizer-license": "Apache 2.0"
+    },
+    "install": {
+      "title": "Tre vie d'ingresso",
+      "subtitle": "Scegli la superficie. Lo stesso backend gira sotto a tutte e tre.",
+      "mcp-label": "Server MCP (Claude, Cursor, Cline)",
+      "mcp-cmd": "uvx --from paperloom paperloom-mcp",
+      "lib-label": "Libreria Python + CLI",
+      "lib-cmd": "pip install paperloom",
+      "web-label": "Web app su localhost",
+      "web-cmd": "git clone … && pnpm install && pnpm dev",
+      "copy": "Copia",
+      "copied": "Copiato",
+      "copy-aria": "Copia comando {label}"
+    },
+    "not-for": {
+      "title": "Quando NON usare Paperloom",
+      "body": "Se l'input è già testo digitale (PDF nativi con vero text layer), usa",
+      "alt": "o uno script di 10 righe. Paperloom è sovra-ingegnerizzato per quel caso — 100× più lento, zero guadagno. Il valore vive nel percorso pixel-to-Markdown, nel post-processing concatenabile e nello storage con audit di privacy."
+    },
+    "footer": {
+      "repo": "GitHub",
+      "license": "Licenza MIT",
+      "docs": "Documentazione",
+      "version": "v0.1",
+      "disclaimer": "Disclaimer",
+      "disclaimer-text": "Fornito così com'è, nessuna garanzia. L'output OCR può contenere errori; l'anonimizzazione PII è statistica, non garantita. La privacy dipende dalla configurazione — guarda il badge in header. Verifica i risultati prima di fare affidamento."
+    },
+    "landing-tools-banner": {
+      "eyebrow": "Anteprima statica",
+      "title": "Gli strumenti richiedono un'installazione locale",
+      "body": "Paperloom esegue OCR e anonimizzatore sulla tua macchina. Questa anteprima su GitHub Pages è statica e non può raggiungere un backend locale.",
+      "back": "Torna alla home",
+      "install": "Istruzioni di installazione"
+    }
   },
   "theme": {
     "label": "Tema",
     "light": "Chiaro",
     "dark": "Scuro",
     "system": "Sistema"
+  },
+  "privacy": {
+    "label": "Modalità privacy: {mode}",
+    "header": "Modalità privacy",
+    "mode-local": "Locale",
+    "mode-hybrid": "Ibrida",
+    "mode-cloud": "Cloud",
+    "scope-local": "locale",
+    "scope-cloud": "cloud",
+    "caveats": "Note",
+    "version": "paperloom v{version}",
+    "component": {
+      "ocr": "OCR",
+      "anonymizer": "Anonimizzatore"
+    },
+    "detail": {
+      "ocr": {
+        "ollama": "Ollama @ {url} ({model})",
+        "mistral": "Mistral {model} (modalità {mode}) — round-trip cloud",
+        "init_failed": "Avvio backend fallito: {error}",
+        "generic": "{provider}"
+      },
+      "anonymizer": {
+        "opf": "OpenAI Privacy Filter, eseguito localmente su CPU/GPU"
+      }
+    },
+    "caveat": {
+      "mcp_client": "Trasporto MCP: quando il client chiamante gira su un provider LLM cloud (Claude Desktop, Cursor, ChatGPT desktop, ecc.), input e output dei tool transitano dall'API di quel provider. paperloom elabora i dati localmente, ma l'agente che legge/scrive le chiamate tool è fuori dal confine di privacy di paperloom. Vedi doc/privacy.md.",
+      "cloud_active": "Componenti cloud attivi: {components}. Gli input a questi componenti lasciano la macchina."
+    }
   },
   "locale": {
     "label": "Lingua",
@@ -91,7 +191,7 @@
       "event-starting": "Avvio di {name}…",
       "event-processing": "Pagina {page} di {total}",
       "event-cancelled": "Annullato",
-      "event-cancelled-toast": "Disconnesso dal job — il backend potrebbe continuare l'esecuzione.",
+      "event-cancelled-toast": "Disconnesso dal job. Il backend potrebbe continuare l'esecuzione.",
       "node-label": "Passo {n}: {name}",
       "node-roledescription": "passo della chain",
       "draft-restored": "Ripristinata l'ultima chain",
@@ -100,7 +200,7 @@
       "tool-added": "Aggiunto {name}",
       "run-success": "Completato",
       "progress": {
-        "downloading_opf": "Download modello OPF (~4 GB) in ~/.opf/privacy_filter — una tantum, solo al primissimo utilizzo…",
+        "downloading_opf": "Download modello OPF (~4 GB) in ~/.opf/privacy_filter (una tantum, solo al primissimo utilizzo)…",
         "loading_opf": "Caricamento modello OPF in memoria…",
         "detecting": "Anonimizzazione di {filename} in corso…",
         "writing_report": "Scrittura report redazioni per {filename}…"
@@ -133,13 +233,55 @@
     "anonymize": {
       "non-en-warning": "Input non in inglese rilevato. OPF è ottimizzato per l'inglese; per migliore recall passa al preset {preset}.",
       "footer-license": "Motore di rilevamento: OpenAI Privacy Filter (Apache 2.0).",
-      "install-title": "L'anonimizzazione richiede OpenAI Privacy Filter",
-      "install-body": "OPF è il motore di detection. Non è installato di default perché richiede torch + transformers (~250 MB) e scarica un checkpoint del modello (~4 GB) al primo run in ~/.opf/privacy_filter. Tutto resta sulla tua macchina — nessun telemetry, nessun round-trip cloud.",
-      "install-cmd-label": "Esegui in un terminale dalla root del repo:",
+      "install-title": "Auto-install disabilitata — installa OpenAI Privacy Filter manualmente",
+      "install-body": "Normalmente OPF si auto-installa alla prima chiamata di anonimizzazione. Hai impostato PAPERLOOM_AUTO_INSTALL_OPF=0, quindi paperloom non lo installerà per te. OPF richiede torch + transformers (~250 MB) e scarica un checkpoint del modello (~4 GB) al primo run in ~/.opf/privacy_filter. Tutto resta sulla tua macchina: nessun telemetry, nessun round-trip cloud.",
+      "install-cmd-label": "Esegui in un terminale dentro il venv del backend:",
       "install-restart": "Riavvia <cmd></cmd> al termine dell'installazione.",
       "install-copy": "Copia comando",
       "install-copied": "Copiato",
-      "install-recheck": "Ricontrolla"
+      "install-recheck": "Ricontrolla",
+      "title": "Anonimizza",
+      "subtitle": "Carica un file .md o .txt. I dati sensibili vengono rilevati e mascherati in locale.",
+      "drop-here": "Trascina un file .md o .txt, oppure clicca per selezionarlo",
+      "drop-help": "Markdown o testo. Massimo {maxKb} KB.",
+      "paste-label": "Oppure incolla testo",
+      "paste-placeholder": "Incolla markdown o testo…",
+      "paste-run": "Anonimizza testo incollato",
+      "preset-label": "Preset",
+      "preset-balanced": "Bilanciato",
+      "preset-recall": "Recall (più match)",
+      "preset-precision": "Precision (meno falsi positivi)",
+      "run": "Anonimizza",
+      "running": "Rilevamento…",
+      "stop": "Stop",
+      "stopped": "Rilevamento fermato.",
+      "resume": "Riprendi",
+      "rerun": "Riesegui",
+      "phase-queued": "in coda",
+      "phase-downloading_opf": "scaricamento modello (~4 GB, solo prima volta)",
+      "phase-loading_opf": "caricamento modello in memoria",
+      "phase-installing_opf": "installazione OPF (prima esecuzione)",
+      "phase-detecting": "rilevamento PII",
+      "phase-writing_report": "scrittura report",
+      "slow-hint": "Il tempo di rilevamento dipende dalla lunghezza del testo: documenti lunghi possono richiedere uno o due minuti.",
+      "replace": "Sostituisci input",
+      "copy": "Copia redatto",
+      "copied": "Copiato negli appunti",
+      "copy-failed": "Copia non riuscita. Seleziona il testo manualmente.",
+      "detected": "{count} rilevati",
+      "masked": "{count} mascherati",
+      "no-pii": "Nessun dato sensibile rilevato.",
+      "tab-original": "Originale",
+      "tab-redacted": "Redatto",
+      "view-tabs-label": "Cambia vista",
+      "category-pii": "PII",
+      "stream-region": "Output anonimizzato",
+      "error-too-large": "File troppo grande. Riduci la selezione.",
+      "error-not-supported": "Tipo file non supportato. Usa .md o .txt.",
+      "error-empty": "Nessun testo da anonimizzare.",
+      "error-generic": "Anonimizzazione fallita. Riprova.",
+      "span-aria": "Dato sensibile dal carattere {start} al {end}, categoria {category}",
+      "uploading": "Caricamento…"
     },
     "names": {
       "ocr-to-markdown": "OCR in Markdown",
@@ -170,6 +312,9 @@
       "uploading": "Caricamento…",
       "starting": "Avvio OCR…",
       "page-of": "Pagina {page} di {filename}",
+      "page-aria": "Pagina {page}, {status}",
+      "select-page-aria": "Seleziona pagina {page}",
+      "upload-aria": "Carica un PDF o un'immagine",
       "stream-region": "Output OCR, aggiornato a mano a mano che le pagine vengono processate",
       "no-output-yet": "In attesa della prima pagina…",
       "download": "Scarica {name} ({size})",
@@ -189,7 +334,7 @@
       "tab-preview": "Anteprima",
       "tab-markdown": "Markdown",
       "stop": "Ferma",
-      "stopped": "OCR fermato — il backend potrebbe continuare.",
+      "stopped": "OCR fermato. Il backend potrebbe continuare.",
       "restart": "Riavvia",
       "replace": "Sostituisci file",
       "status-cancelled": "Fermato",
@@ -207,13 +352,13 @@
       "range-label": "Pagine",
       "range-placeholder": "1,3-5,7",
       "range-help": "Pagine o intervalli separati da virgola (es. 1,3-5,7).",
-      "pre-run-title": "{count} pagine — scegli cosa convertire",
+      "pre-run-title": "{count} pagine: scegli cosa convertire",
       "pre-run-body": "I documenti lunghi richiedono tempo. Converti tutto, oppure limita a pagine specifiche.",
       "run-all": "Converti tutte le {n} pagine",
       "include-figures-label": "Includi figure",
       "include-figures-help": "Ritaglia le figure e le include nello ZIP scaricato.",
       "figures-none-warning": "Nessuna figura ritagliata. Le didascalie sono comunque nel markdown.",
-      "figures-partial": "{saved} di {total} figure salvate. Per le altre non è stato possibile ritagliarle — solo didascalia."
+      "figures-partial": "{saved} di {total} figure salvate. Per le altre solo didascalia (nessun ritaglio possibile)."
     }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "name": "paperloom",
+  "owner": {
+    "name": "luciopalmieri",
+    "url": "https://github.com/luciopalmieri"
+  },
+  "plugins": [
+    {
+      "name": "paperloom",
+      "source": ".",
+      "description": "Local-first document toolkit — streaming OCR, PII anonymizer, 19 chainable PDF/Markdown tools. MCP-native."
+    }
+  ]
+}

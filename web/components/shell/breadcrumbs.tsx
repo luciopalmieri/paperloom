@@ -21,6 +21,7 @@ export function Breadcrumbs() {
   const tNav = useTranslations("nav");
   const tChain = useTranslations("tools.chain");
   const tOcr = useTranslations("tools.ocr-to-markdown");
+  const tAnon = useTranslations("tools.anonymize");
 
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length === 0) return null;
@@ -29,6 +30,7 @@ export function Breadcrumbs() {
     if (slug === "tools") return tNav("tools");
     if (slug === "chain") return tChain("title");
     if (slug === "ocr-to-markdown") return tOcr("title");
+    if (slug === "anonymize") return tAnon("title");
     return slug;
   };
 

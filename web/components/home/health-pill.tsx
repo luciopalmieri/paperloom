@@ -82,11 +82,11 @@ function SubsystemRow({
 }) {
   return (
     <li className="flex items-center gap-1">
-      <span aria-hidden className={ok ? "text-emerald-600" : "text-amber-600"}>
+      <span aria-hidden className={ok ? "text-success" : "text-warning"}>
         {ok ? "✓" : "✗"}
       </span>
       <span>
-        {label} — {ok ? okText : missingText}
+        {label}: {ok ? okText : missingText}
       </span>
     </li>
   );
