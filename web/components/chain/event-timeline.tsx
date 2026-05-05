@@ -37,9 +37,9 @@ const ICON: Record<TimelineItemStatus, typeof Circle> = {
 const ICON_COLOR: Record<TimelineItemStatus, string> = {
   pending: "text-muted-foreground",
   active: "text-primary",
-  done: "text-emerald-600 dark:text-emerald-400",
+  done: "text-success",
   error: "text-destructive",
-  warning: "text-amber-600 dark:text-amber-400",
+  warning: "text-warning",
 };
 
 function formatDuration(ms: number): string {

@@ -25,8 +25,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
  || uv sync --no-install-project
 
 # Project sources (overridden by bind mount in dev)
-COPY backend/src ./src
+COPY backend/paperloom ./paperloom
 COPY backend/tests ./tests
 
 EXPOSE 8000
-CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uv", "run", "uvicorn", "paperloom.main:app", "--host", "0.0.0.0", "--port", "8000"]

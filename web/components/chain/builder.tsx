@@ -613,15 +613,19 @@ export function ChainBuilder({
       className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-6 py-8 pb-28 sm:pb-8"
     >
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
-        <p className="text-muted-foreground mt-1">{t("subtitle")}</p>
+        <h1 className="font-mono text-2xl font-semibold tracking-tight">
+          {t("title")}
+        </h1>
+        <p className="text-muted-foreground mt-2 max-w-prose text-base">
+          {t("subtitle")}
+        </p>
       </header>
 
       {hasAnonymize && <OpfInstallBanner />}
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">
+          <CardTitle as="h2" className="text-sm font-semibold">
             {t("selected-files", { count: files.length })}
           </CardTitle>
         </CardHeader>
@@ -683,7 +687,7 @@ export function ChainBuilder({
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex flex-col items-stretch gap-2 text-sm font-medium sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle as="h2" className="flex flex-col items-stretch gap-2 text-sm font-semibold sm:flex-row sm:items-center sm:justify-between">
             <span>{t("steps-title")}</span>
             <ToolPicker
               label={t("add-tool")}
@@ -711,7 +715,7 @@ export function ChainBuilder({
                 aria-roledescription={t("node-roledescription")}
                 className="border-input focus-visible:ring-ring/50 rounded-lg border p-3 focus-visible:ring-2 focus-visible:outline-none"
                 onKeyDown={(e) => {
-                  if (e.key === "Delete" || e.key === "Backspace") {
+                  if (e.key === "Delete") {
                     if ((e.target as HTMLElement).tagName === "INPUT") return;
                     if ((e.target as HTMLElement).tagName === "SELECT") return;
                     e.preventDefault();
@@ -828,7 +832,7 @@ export function ChainBuilder({
       {nonEnWarning && (
         <p
           role="status"
-          className="bg-amber-100 text-amber-950 border-amber-300 dark:bg-amber-900/50 dark:text-amber-50 dark:border-amber-700 flex items-start gap-2 rounded border p-2 text-sm"
+          className="bg-warning/10 text-foreground border-warning/40 flex items-start gap-2 rounded border p-2 text-sm"
         >
           <span aria-hidden>⚠</span>
           <span>{tAnon("non-en-warning", { preset: nonEnWarning })}</span>
@@ -838,7 +842,7 @@ export function ChainBuilder({
       {(timeline.length > 0 || rawEvents.length > 0) && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">{t("events")}</CardTitle>
+            <CardTitle as="h2" className="text-sm font-semibold">{t("events")}</CardTitle>
           </CardHeader>
           <CardContent>
             <EventTimeline

@@ -1,0 +1,22 @@
+{
+  "name": "paperloom-video-promo",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Standalone Remotion project for paperloom promotional videos. Independent from the main workspace; safe to delete.",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render Demo out/paperloom-15s.mp4",
+    "render:gif": "remotion render Demo out/paperloom-15s.gif --codec=gif",
+    "render:webm": "remotion render Demo out/paperloom-15s.webm --codec=vp8"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from src import jobs as jobs_mod
-from src import mcp_server
-from src.config import settings
+from paperloom import jobs as jobs_mod
+from paperloom import mcp_server
+from paperloom.config import settings
 
 
 @pytest.fixture

@@ -7,10 +7,10 @@ from typing import Any
 import pypdfium2 as pdfium
 from fastapi.testclient import TestClient
 
-from src.anonymizer import detect, redact, report
-from src.anonymizer.detect import Span
-from src.config import settings
-from src.main import app
+from paperloom.anonymizer import detect, redact, report
+from paperloom.anonymizer.detect import Span
+from paperloom.config import settings
+from paperloom.main import app
 
 
 def test_redact_apply_groups_per_category():
@@ -98,7 +98,7 @@ def test_anonymize_chain_emits_report(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "job_storage_root", str(tmp_path))
 
     # Patch the OPF symbol the detect module imports lazily.
-    import src.anonymizer.detect as det
+    import paperloom.anonymizer.detect as det
 
     def fake_build_opf(preset: str, device: str) -> _FakeOpf:
         return _FakeOpf()
@@ -140,8 +140,10 @@ def test_anonymize_chain_emits_report(tmp_path, monkeypatch):
 
 def test_anonymize_emits_error_when_opf_missing(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "job_storage_root", str(tmp_path))
+    # Disable auto-install so we exercise the explicit error path.
+    monkeypatch.setenv("PAPERLOOM_AUTO_INSTALL_OPF", "0")
 
-    import src.anonymizer.detect as det
+    import paperloom.anonymizer.detect as det
 
     monkeypatch.setattr(det, "_opf_available", lambda: False)
 
@@ -158,3 +160,41 @@ def test_anonymize_emits_error_when_opf_missing(tmp_path, monkeypatch):
     with client.stream("GET", f"/api/jobs/{job['job_id']}/events") as r:
         body = b"".join(r.iter_bytes()).decode()
     assert "opf_not_installed" in body
+
+
+def test_anonymize_auto_install_attempts_when_opf_missing(tmp_path, monkeypatch):
+    monkeypatch.setattr(settings, "job_storage_root", str(tmp_path))
+    monkeypatch.setenv("PAPERLOOM_AUTO_INSTALL_OPF", "1")
+
+    import paperloom.anonymizer.detect as det
+    from paperloom.anonymizer import _lazy_install
+
+    monkeypatch.setattr(det, "_opf_available", lambda: False)
+
+    called: list[bool] = []
+
+    def fake_install(emit=None):
+        called.append(True)
+        if emit:
+            emit("simulated install attempt")
+        # Pretend install fails so we don't actually pull torch.
+        return False
+
+    monkeypatch.setattr(_lazy_install, "install_opf", fake_install)
+
+    client = TestClient(app)
+    fid = client.post(
+        "/api/files",
+        files={"file": ("notes.md", b"hello", "text/markdown")},
+    ).json()["file_id"]
+
+    job = client.post(
+        "/api/jobs",
+        json={"tools": [{"slug": "anonymize", "params": {}}], "inputs": [fid]},
+    ).json()
+    with client.stream("GET", f"/api/jobs/{job['job_id']}/events") as r:
+        body = b"".join(r.iter_bytes()).decode()
+
+    assert called == [True]
+    assert "installing_opf" in body
+    assert "opf_install_failed" in body

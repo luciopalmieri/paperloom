@@ -8,14 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { backendUrl } from "@/lib/api";
 
-const INSTALL_COMMAND = "pnpm install:opf";
+const INSTALL_COMMAND =
+  "uv pip install 'opf @ git+https://github.com/openai/privacy-filter@main'";
 const RESTART_COMMAND = "pnpm dev";
 
-type Health = { ollama: boolean; opf: boolean };
+type Health = { ollama: boolean; opf: boolean; opf_auto_install?: boolean };
 
 export function OpfInstallBanner() {
   const t = useTranslations("tools.anonymize");
   const [installed, setInstalled] = useState<boolean | null>(null);
+  const [autoInstall, setAutoInstall] = useState<boolean>(true);
   const [checking, setChecking] = useState(false);
 
   const refresh = async () => {
@@ -28,6 +30,7 @@ export function OpfInstallBanner() {
       }
       const data = (await r.json()) as Health;
       setInstalled(Boolean(data.opf));
+      setAutoInstall(data.opf_auto_install ?? true);
     } catch {
       setInstalled(null);
     } finally {
@@ -39,16 +42,20 @@ export function OpfInstallBanner() {
     void refresh();
   }, []);
 
-  if (installed === true) return null;
+  // Hide banner when OPF is installed, or when auto-install will handle it
+  // transparently on the first run. Banner appears only when the user has
+  // explicitly disabled auto-install (PAPERLOOM_AUTO_INSTALL_OPF=0) and OPF
+  // is missing.
+  if (installed === true || autoInstall === true) return null;
 
   return (
     <Card
       role="region"
       aria-labelledby="opf-install-title"
-      className="border-amber-300 bg-amber-100 text-amber-950 dark:border-amber-700 dark:bg-amber-900/50 dark:text-amber-50"
+      className="border-warning/40 bg-warning/10 text-foreground"
     >
       <CardHeader>
-        <CardTitle id="opf-install-title" className="text-base">
+        <CardTitle as="h2" id="opf-install-title" className="text-base">
           {t("install-title")}
         </CardTitle>
       </CardHeader>

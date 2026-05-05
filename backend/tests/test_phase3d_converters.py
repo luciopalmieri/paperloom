@@ -16,8 +16,8 @@ import pypdfium2 as pdfium
 import pytest
 from fastapi.testclient import TestClient
 
-from src.config import settings
-from src.main import app
+from paperloom.config import settings
+from paperloom.main import app
 
 
 def _weasy_works() -> bool:
