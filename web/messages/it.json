@@ -307,8 +307,8 @@
     "ocr-to-markdown": {
       "title": "OCR in Markdown",
       "subtitle": "Carica un PDF o un'immagine. Ottieni Markdown pulito, pagina per pagina.",
-      "drop-here": "Trascina qui un PDF o un'immagine, o clicca per sceglierlo",
-      "drop-help": "PDF o immagine · max {maxMb} MB · max {maxPages} pagine",
+      "drop-here": "Trascina qui PDF o immagini, oppure clicca per scegliere",
+      "drop-help": "PDF o immagini · max {maxMb} MB ciascuno · max {maxPages} pagine",
       "uploading": "Caricamento…",
       "starting": "Avvio OCR…",
       "page-of": "Pagina {page} di {filename}",
@@ -358,7 +358,13 @@
       "include-figures-label": "Includi figure",
       "include-figures-help": "Ritaglia le figure e le include nello ZIP scaricato.",
       "figures-none-warning": "Nessuna figura ritagliata. Le didascalie sono comunque nel markdown.",
-      "figures-partial": "{saved} di {total} figure salvate. Per le altre solo didascalia (nessun ritaglio possibile)."
+      "figures-partial": "{saved} di {total} figure salvate. Per le altre solo didascalia (nessun ritaglio possibile).",
+      "files-count": "{count, plural, one {# file} other {# file}}",
+      "pages-count-short": "{count, plural, one {# pagina} other {# pagine}}",
+      "reverse-order": "Inverti",
+      "move-up": "Sposta su",
+      "move-down": "Sposta giù",
+      "remove-file": "Rimuovi"
     }
   }
 }

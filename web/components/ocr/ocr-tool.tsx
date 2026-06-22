@@ -1,12 +1,16 @@
 "use client";
 
 import {
+  ArrowDown,
   ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
   Copy,
   Download,
   RefreshCw,
   RotateCw,
   Square,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
@@ -34,8 +38,10 @@ type PageStatus = "pending" | "processing" | "done" | "skipped" | "cancelled";
 
 type PageFigures = { saved: number; total: number };
 
+type FilePageInfo = { fileId: string; localPage: number; filename: string };
+
 type State = {
-  uploaded: UploadResp | null;
+  files: UploadResp[];
   jobId: string | null;
   pages: Record<number, string>;
   pageOrder: number[];
@@ -52,7 +58,7 @@ type State = {
 };
 
 const initialState: State = {
-  uploaded: null,
+  files: [],
   jobId: null,
   pages: {},
   pageOrder: [],
@@ -79,6 +85,22 @@ const isImageName = (name: string) => {
   return IMAGE_EXTS.some((ext) => lower.endsWith(ext));
 };
 
+function resetOcrFields(s: State): State {
+  return {
+    ...s,
+    pages: {},
+    pageOrder: [],
+    donePages: new Set<number>(),
+    doneCount: 0,
+    artifacts: [],
+    jobId: null,
+    status: "idle",
+    error: null,
+    activePage: null,
+    pageFigures: {},
+  };
+}
+
 export function OcrTool() {
   const t = useTranslations("tools.ocr-to-markdown");
   const f = useFormatter();
@@ -96,6 +118,17 @@ export function OcrTool() {
 
   useEffect(() => () => esRef.current?.close(), []);
 
+  const filePageMap = useMemo<FilePageInfo[]>(() => {
+    const map: FilePageInfo[] = [];
+    for (const file of state.files) {
+      const pages = file.pages ?? 1;
+      for (let p = 1; p <= pages; p++) {
+        map.push({ fileId: file.file_id, localPage: p, filename: file.filename });
+      }
+    }
+    return map;
+  }, [state.files]);
+
   const reset = () => {
     esRef.current?.close();
     esRef.current = null;
@@ -107,7 +140,7 @@ export function OcrTool() {
   };
 
   const startOcrJob = useCallback(
-    async (uploaded: UploadResp, runPages: number[], includeImages: boolean) => {
+    async (files: UploadResp[], runPages: number[], includeImages: boolean) => {
       let jobId: string;
       const params: Record<string, unknown> = {};
       if (runPages.length > 0) params.pages = runPages;
@@ -118,7 +151,7 @@ export function OcrTool() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             tools: [{ slug: "ocr-to-markdown", params }],
-            inputs: [uploaded.file_id],
+            inputs: files.map((f) => f.file_id),
           }),
         });
         if (!r.ok) {
@@ -201,11 +234,11 @@ export function OcrTool() {
         const data = JSON.parse((ev as MessageEvent).data) as { artifacts: Artifact[] };
         setState((s) => {
           const totalSaved = Object.values(s.pageFigures).reduce(
-            (acc, f) => acc + f.saved,
+            (acc, fig) => acc + fig.saved,
             0,
           );
           const totalDetected = Object.values(s.pageFigures).reduce(
-            (acc, f) => acc + f.total,
+            (acc, fig) => acc + fig.total,
             0,
           );
           if (s.includeImages && totalDetected > 0 && totalSaved === 0) {
@@ -263,9 +296,9 @@ export function OcrTool() {
   };
 
   const restart = async () => {
-    if (!state.uploaded) return;
+    if (!state.files.length) return;
     const parsed = parsePageRange(pageInput, state.totalPages);
-    await startOcrJob(state.uploaded, parsed, state.includeImages);
+    await startOcrJob(state.files, parsed, state.includeImages);
   };
 
   const replace = () => {
@@ -274,7 +307,7 @@ export function OcrTool() {
   };
 
   const onRotate = async () => {
-    if (!state.uploaded) return;
+    if (state.files.length !== 1 || !isImageName(state.files[0].filename)) return;
     if (typeof window !== "undefined") {
       const confirmed = window.confirm(t("rotate-confirm"));
       if (!confirmed) return;
@@ -283,7 +316,7 @@ export function OcrTool() {
     esRef.current = null;
     try {
       const r = await fetch(
-        backendUrl(`/api/files/${state.uploaded.file_id}/rotate?degrees=90`),
+        backendUrl(`/api/files/${state.files[0].file_id}/rotate?degrees=90`),
         { method: "POST" },
       );
       if (!r.ok) {
@@ -295,63 +328,95 @@ export function OcrTool() {
       return;
     }
     setPreviewBust((n) => n + 1);
-    const uploaded = state.uploaded;
-    await startOcrJob(uploaded, [], state.includeImages);
+    await startOcrJob(state.files, [], state.includeImages);
   };
 
-  const onUpload = async (file: File) => {
+  const onUpload = async (fileList: FileList | File[]) => {
     reset();
-    const lower = file.name.toLowerCase();
-    if (!ACCEPTED_EXTS.some((ext) => lower.endsWith(ext))) {
-      setState((s) => ({ ...s, error: t("error-not-supported"), status: "error" }));
-      return;
-    }
-    if (file.size > MAX_MB * 1024 * 1024) {
-      setState((s) => ({ ...s, error: t("error-too-large"), status: "error" }));
-      return;
+    const sorted = Array.from(fileList).sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const file of sorted) {
+      const lower = file.name.toLowerCase();
+      if (!ACCEPTED_EXTS.some((ext) => lower.endsWith(ext))) {
+        setState((s) => ({ ...s, error: t("error-not-supported"), status: "error" }));
+        return;
+      }
+      if (file.size > MAX_MB * 1024 * 1024) {
+        setState((s) => ({ ...s, error: t("error-too-large"), status: "error" }));
+        return;
+      }
     }
 
     setState((s) => ({ ...s, status: "uploading", error: null }));
-    const fd = new FormData();
-    fd.append("file", file);
 
-    let uploaded: UploadResp;
-    try {
-      const r = await fetch(backendUrl("/api/files"), { method: "POST", body: fd });
-      if (r.status === 413) {
-        const j = await r.json().catch(() => ({}));
-        const code = j?.detail?.code;
-        setState((s) => ({
-          ...s,
-          status: "error",
-          error: code === "too_many_pages" ? t("error-too-many-pages") : t("error-too-large"),
-        }));
-        return;
-      }
-      if (!r.ok) {
+    const uploaded: UploadResp[] = [];
+    for (const file of sorted) {
+      const fd = new FormData();
+      fd.append("file", file);
+
+      let resp: UploadResp;
+      try {
+        const r = await fetch(backendUrl("/api/files"), { method: "POST", body: fd });
+        if (r.status === 413) {
+          const j = await r.json().catch(() => ({}));
+          const code = j?.detail?.code;
+          setState((s) => ({
+            ...s,
+            status: "error",
+            error:
+              code === "too_many_pages" ? t("error-too-many-pages") : t("error-too-large"),
+          }));
+          return;
+        }
+        if (!r.ok) {
+          setState((s) => ({ ...s, status: "error", error: t("error-generic") }));
+          return;
+        }
+        resp = (await r.json()) as UploadResp;
+      } catch {
         setState((s) => ({ ...s, status: "error", error: t("error-generic") }));
         return;
       }
-      uploaded = (await r.json()) as UploadResp;
-    } catch {
-      setState((s) => ({ ...s, status: "error", error: t("error-generic") }));
-      return;
+      uploaded.push(resp);
     }
 
-    const totalPages = uploaded.pages ?? 1;
+    const totalPages = uploaded.reduce((sum, u) => sum + (u.pages ?? 1), 0);
     setState((s) => ({
       ...s,
-      uploaded,
+      files: uploaded,
       totalPages,
       status: "idle",
     }));
 
-    const isImage = isImageName(uploaded.filename);
-    if (!isImage && totalPages > AUTO_OCR_THRESHOLD) {
+    const allImages = uploaded.every((u) => isImageName(u.filename));
+    if (!allImages && totalPages > AUTO_OCR_THRESHOLD) {
       setPendingRun(true);
       return;
     }
     await startOcrJob(uploaded, [], state.includeImages);
+  };
+
+  const reverseFiles = () => {
+    setState((s) => resetOcrFields({ ...s, files: [...s.files].reverse() }));
+  };
+
+  const moveFile = (idx: number, dir: -1 | 1) => {
+    setState((s) => {
+      const j = idx + dir;
+      if (j < 0 || j >= s.files.length) return s;
+      const next = [...s.files];
+      [next[idx], next[j]] = [next[j], next[idx]];
+      return resetOcrFields({ ...s, files: next });
+    });
+  };
+
+  const removeFile = (idx: number) => {
+    setState((s) => {
+      const next = s.files.filter((_, i) => i !== idx);
+      if (next.length === 0) return { ...initialState };
+      const totalPages = next.reduce((sum, f) => sum + (f.pages ?? 1), 0);
+      return resetOcrFields({ ...s, files: next, totalPages });
+    });
   };
 
   const totalToProcess =
@@ -393,14 +458,11 @@ export function OcrTool() {
     [state.donePages, state.runPages, state.activePage, state.status],
   );
 
-  const jumpToPage = useCallback(
-    (p: number) => {
-      setState((s) => ({ ...s, activePage: p }));
-      previewRefs.current[p]?.scrollIntoView({ behavior: "smooth", block: "start" });
-      markdownRefs.current[p]?.scrollIntoView({ behavior: "smooth", block: "start" });
-    },
-    [],
-  );
+  const jumpToPage = useCallback((p: number) => {
+    setState((s) => ({ ...s, activePage: p }));
+    previewRefs.current[p]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    markdownRefs.current[p]?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   const updateSelection = useCallback((next: Set<number>) => {
     setSelected(next);
@@ -455,15 +517,15 @@ export function OcrTool() {
   };
 
   const runSelected = async () => {
-    if (!state.uploaded) return;
+    if (!state.files.length) return;
     const parsed = parsePageRange(pageInput, state.totalPages);
     if (parsed.length === 0) return;
-    await startOcrJob(state.uploaded, parsed, state.includeImages);
+    await startOcrJob(state.files, parsed, state.includeImages);
   };
 
   const runAll = async () => {
-    if (!state.uploaded) return;
-    await startOcrJob(state.uploaded, [], state.includeImages);
+    if (!state.files.length) return;
+    await startOcrJob(state.files, [], state.includeImages);
   };
 
   return (
@@ -480,7 +542,7 @@ export function OcrTool() {
         </div>
       </header>
 
-      {!state.uploaded && (
+      {state.files.length === 0 && (
         <button
           type="button"
           aria-label={t("upload-aria")}
@@ -490,8 +552,7 @@ export function OcrTool() {
           }}
           onDrop={(e) => {
             e.preventDefault();
-            const file = e.dataTransfer.files?.[0];
-            if (file) onUpload(file);
+            if (e.dataTransfer.files?.length) onUpload(e.dataTransfer.files);
           }}
           className="border-input bg-card hover:bg-muted flex h-48 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed text-sm transition-colors"
         >
@@ -506,11 +567,11 @@ export function OcrTool() {
       <input
         ref={inputRef}
         type="file"
+        multiple
         accept="application/pdf,.pdf,image/png,image/jpeg,image/webp,image/tiff,image/bmp,image/gif"
         className="hidden"
         onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onUpload(f);
+          if (e.target.files?.length) onUpload(e.target.files);
           e.target.value = "";
         }}
       />
@@ -523,7 +584,72 @@ export function OcrTool() {
 
       {state.status === "uploading" && <p className="text-sm">{t("uploading")}</p>}
 
-      {state.uploaded && state.totalPages > 0 && (
+      {state.files.length > 0 && (
+        <div className="bg-muted/40 flex flex-col gap-1.5 rounded-md border p-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wide">
+              {t("files-count", { count: state.files.length })}
+            </span>
+            {state.files.length > 1 && state.status !== "running" && (
+              <Button size="xs" variant="ghost" onClick={reverseFiles}>
+                <ArrowUpDown className="mr-1 size-3" aria-hidden />
+                {t("reverse-order")}
+              </Button>
+            )}
+          </div>
+          <ScrollArea className="max-h-40">
+            <ul className="flex flex-col gap-0.5">
+              {state.files.map((file, idx) => (
+                <li
+                  key={file.file_id}
+                  className="flex items-center gap-1 text-xs"
+                >
+                  {state.files.length > 1 && state.status !== "running" && (
+                    <>
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        disabled={idx === 0}
+                        onClick={() => moveFile(idx, -1)}
+                        aria-label={t("move-up")}
+                      >
+                        <ArrowUp className="size-3" aria-hidden />
+                      </Button>
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        disabled={idx === state.files.length - 1}
+                        onClick={() => moveFile(idx, 1)}
+                        aria-label={t("move-down")}
+                      >
+                        <ArrowDown className="size-3" aria-hidden />
+                      </Button>
+                    </>
+                  )}
+                  <code className="truncate flex-1">{file.filename}</code>
+                  {file.pages !== null && (
+                    <span className="text-muted-foreground shrink-0">
+                      {t("pages-count-short", { count: file.pages })}
+                    </span>
+                  )}
+                  {state.status !== "running" && (
+                    <Button
+                      size="icon-xs"
+                      variant="ghost"
+                      onClick={() => removeFile(idx)}
+                      aria-label={t("remove-file")}
+                    >
+                      <Trash2 className="size-3" aria-hidden />
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        </div>
+      )}
+
+      {state.files.length > 0 && state.totalPages > 0 && (
         <>
           <Progress value={progressPercent} aria-label={`${progressPercent}%`} />
 
@@ -533,7 +659,11 @@ export function OcrTool() {
 
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium">{state.uploaded.filename}</span>
+              <span className="font-medium">
+                {state.files.length === 1
+                  ? state.files[0].filename
+                  : t("files-count", { count: state.files.length })}
+              </span>
               <span className="text-muted-foreground text-xs tabular-nums">
                 {f.number(state.doneCount)} / {f.number(totalToProcess)}
               </span>
@@ -589,9 +719,9 @@ export function OcrTool() {
                     })}
                   </a>
                 ))}
-              {state.uploaded && (
+              {state.files.length > 0 && (
                 <Link
-                  href={`/tools/chain?initial=ocr-to-markdown&from=${state.uploaded.file_id}`}
+                  href={`/tools/chain?initial=ocr-to-markdown&from=${state.files[0].file_id}`}
                   className="border-input hover:bg-muted focus-visible:ring-ring/50 inline-flex h-8 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none"
                 >
                   {t("continue")}
@@ -753,7 +883,8 @@ export function OcrTool() {
                     aria-label={t("tab-pages")}
                     className="flex flex-col gap-2 p-2"
                   >
-                    {Array.from({ length: state.totalPages }, (_, i) => i + 1).map((p) => {
+                    {filePageMap.map((info, i) => {
+                      const p = i + 1;
                       const active = state.activePage === p;
                       const isFirstFocusable =
                         state.activePage == null && p === 1;
@@ -761,8 +892,9 @@ export function OcrTool() {
                       return (
                         <PageThumbnail
                           key={p}
-                          fileId={state.uploaded!.file_id}
-                          page={p}
+                          fileId={info.fileId}
+                          page={info.localPage}
+                          globalPage={p}
                           bust={previewBust}
                           active={active}
                           tabIndex={active || isFirstFocusable ? 0 : -1}
@@ -794,7 +926,7 @@ export function OcrTool() {
             >
               <CardHeader className="flex flex-row items-center justify-between gap-2">
                 <CardTitle as="h2" className="text-sm font-semibold">{t("tab-preview")}</CardTitle>
-                {state.uploaded && isImageName(state.uploaded.filename) && (
+                {state.files.length === 1 && isImageName(state.files[0].filename) && (
                   <Button size="sm" variant="outline" onClick={onRotate}>
                     <RotateCw className="mr-1 size-3" aria-hidden />
                     {t("rotate")}
@@ -804,21 +936,24 @@ export function OcrTool() {
               <CardContent className="p-0">
                 <ScrollArea className="h-[70vh]">
                   <div className="flex flex-col gap-4 p-4">
-                    {Array.from({ length: state.totalPages }, (_, i) => i + 1).map((p) => (
-                      <div
-                        key={p}
-                        ref={(el) => {
-                          previewRefs.current[p] = el;
-                        }}
-                      >
-                        <PagePreview
-                          fileId={state.uploaded!.file_id}
-                          page={p}
-                          bust={previewBust}
-                          alt={t("page-of", { page: p, filename: state.uploaded!.filename })}
-                        />
-                      </div>
-                    ))}
+                    {filePageMap.map((info, i) => {
+                      const p = i + 1;
+                      return (
+                        <div
+                          key={`${info.fileId}-${info.localPage}`}
+                          ref={(el) => {
+                            previewRefs.current[p] = el;
+                          }}
+                        >
+                          <PagePreview
+                            fileId={info.fileId}
+                            page={info.localPage}
+                            bust={previewBust}
+                            alt={t("page-of", { page: p, filename: info.filename })}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                 </ScrollArea>
               </CardContent>
@@ -914,6 +1049,7 @@ const STATUS_DOT: Record<PageStatus, string> = {
 const PageThumbnail = memo(function PageThumbnail({
   fileId,
   page,
+  globalPage,
   bust,
   active,
   tabIndex,
@@ -929,6 +1065,7 @@ const PageThumbnail = memo(function PageThumbnail({
 }: {
   fileId: string;
   page: number;
+  globalPage: number;
   bust: number;
   active: boolean;
   tabIndex: 0 | -1;
@@ -963,11 +1100,11 @@ const PageThumbnail = memo(function PageThumbnail({
     >
       <button
         type="button"
-        data-thumb={page}
+        data-thumb={globalPage}
         tabIndex={tabIndex}
         aria-current={active ? "true" : undefined}
-        onClick={() => onClick(page)}
-        onKeyDown={(e) => onKeyDown(e, page)}
+        onClick={() => onClick(globalPage)}
+        onKeyDown={(e) => onKeyDown(e, globalPage)}
         aria-label={ariaLabel}
         className="focus:outline-none"
       >
@@ -993,7 +1130,7 @@ const PageThumbnail = memo(function PageThumbnail({
           />
         </div>
         <div className="mt-1 flex items-center justify-between gap-1">
-          <span className="font-medium">{page}</span>
+          <span className="font-medium">{globalPage}</span>
           <span className="flex items-center gap-1">
             <span
               aria-hidden
@@ -1020,7 +1157,7 @@ const PageThumbnail = memo(function PageThumbnail({
         <input
           type="checkbox"
           checked={selected}
-          onChange={() => onToggle(page)}
+          onChange={() => onToggle(globalPage)}
           className="h-3.5 w-3.5"
           aria-label={selectAriaLabel}
         />

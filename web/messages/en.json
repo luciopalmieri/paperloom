@@ -307,8 +307,8 @@
     "ocr-to-markdown": {
       "title": "OCR to Markdown",
       "subtitle": "Drop a PDF or image. Get clean Markdown, page by page.",
-      "drop-here": "Drop a PDF or image here, or click to choose",
-      "drop-help": "PDF or image · max {maxMb} MB · max {maxPages} pages",
+      "drop-here": "Drop PDFs or images here, or click to choose",
+      "drop-help": "PDF or images · max {maxMb} MB each · max {maxPages} pages",
       "uploading": "Uploading…",
       "starting": "Starting OCR…",
       "page-of": "Page {page} of {filename}",
@@ -358,7 +358,13 @@
       "include-figures-label": "Include figures",
       "include-figures-help": "Crop figures and bundle them in the download.",
       "figures-none-warning": "No figures could be cropped. The captions are still in the markdown.",
-      "figures-partial": "{saved} of {total} figures saved. Captions only for the rest (no usable bounds)."
+      "figures-partial": "{saved} of {total} figures saved. Captions only for the rest (no usable bounds).",
+      "files-count": "{count, plural, one {# file} other {# files}}",
+      "pages-count-short": "{count, plural, one {# page} other {# pages}}",
+      "reverse-order": "Reverse",
+      "move-up": "Move up",
+      "move-down": "Move down",
+      "remove-file": "Remove"
     }
   }
 }
